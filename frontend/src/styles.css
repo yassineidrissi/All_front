@@ -1,0 +1,28 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --leva-sizes-rootWidth: 340px;
+}
+
+#root {
+    width: 100vw;
+    height: 100vh;
+}
+
+body {
+    margin: 0;
+    /* replace gradient with your hospital image: */
+    background-image: url("/images/hospital-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    /* optional: dark overlay for readability */
+    position: relative;
+}
+
+body.greenScreen {
+    background-color: #00ff00;
+    background-image: none;
+}
