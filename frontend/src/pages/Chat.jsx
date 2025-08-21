@@ -1,13 +1,15 @@
-// src/pages/Chat.jsx
+
 import { useState } from "react";
 import "../style.css";
 import logo from "../assets/logo.png";
+import { useAuth } from "../context/AuthContext";
 
-const API_URL = "http://localhost:3000";
+const API_URL =  "http://localhost:8000";
 
 export default function Chat() {
     const [prompt, setPrompt] = useState("");
     const [loading, setLoading] = useState(false);
+    const { user, logout, token } = useAuth();
 
     const [original, setOriginal] = useState({
         prompt: "Saisissez votre prompt ci-dessous",
@@ -44,11 +46,21 @@ export default function Chat() {
         try {
             const res = await fetch(`${API_URL}/api/best_prompt`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` // Add auth token
+                },
                 body: JSON.stringify({ prompt }),
             });
 
-            if (!res.ok) throw new Error(`API error: ${res.status}`);
+            if (!res.ok) {
+                if (res.status === 401) {
+                    // Token expired or invalid, logout user
+                    logout();
+                    return;
+                }
+                throw new Error(`API error: ${res.status}`);
+            }
 
             const data = await res.json();
 
@@ -85,6 +97,12 @@ export default function Chat() {
         }
     };
 
+    const handleLogout = () => {
+        if (window.confirm("Êtes-vous sûr de vouloir vous déconnecter ?")) {
+            logout();
+        }
+    };
+
     return (
         <div className="main-container">
             {/* HEADER */}
@@ -96,6 +114,25 @@ export default function Chat() {
                 <h1>Plateforme P-2 : Atelier de Feedback Réflexif</h1>
                 <nav className="nav-links">
                     <a href="/" className="active">Accueil</a>
+                    <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <span style={{ color: '#666', fontSize: '0.9rem' }}>
+                            Bonjour, {user?.name || 'Utilisateur'}
+                        </span>
+                        <button 
+                            onClick={handleLogout}
+                            style={{
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                border: '1px solid #ddd',
+                                background: '#f8f9fa',
+                                color: '#666',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem'
+                            }}
+                        >
+                            Déconnexion
+                        </button>
+                    </div>
                 </nav>
             </header>
 
