@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import authRouter, { authenticateToken } from './routes/auth.js';
 import chatRouter from './routes/chat.js';
 import { testConnection } from './db.js';
+import ttsRouter from './routes/tts.js';
 
 // Load environment variables
 dotenv.config();
@@ -28,7 +29,7 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 // Routes
 app.use('/api/auth', authRouter);
 app.use('/api/chat', authenticateToken, chatRouter); // Protect chat routes with auth
-app.use(chatRouter); // Keep your existing chat router for backward compatibility
+app.use('/api/tts', ttsRouter);
 
 // Protected route example
 app.get('/api/protected', authenticateToken, (req, res) => {
@@ -49,7 +50,7 @@ app.get('/api/public', (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
@@ -67,7 +68,7 @@ app.use('*', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-  
+
   // JWT errors
   if (err.name === 'JsonWebTokenError') {
     return res.status(401).json({
@@ -75,7 +76,7 @@ app.use((err, req, res, next) => {
       message: 'Invalid token'
     });
   }
-  
+
   if (err.name === 'TokenExpiredError') {
     return res.status(401).json({
       success: false,

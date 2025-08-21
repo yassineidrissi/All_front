@@ -29,7 +29,8 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "express-validator": "^7.0.1",
-    "express-rate-limit": "^7.1.5"
+    "express-rate-limit": "^7.1.5",
+    "elevenlabs-node": "^1.2.0"
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.7.10",
