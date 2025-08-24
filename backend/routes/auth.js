@@ -201,4 +201,31 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
   }
 });
 
+// Profile endpoint
+router.get('/profile', authenticateToken, async (req, res) => {
+  try {
+    const user = await userQueries.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name
+      }
+    });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
 export default router;
