@@ -106,6 +106,7 @@ app.listen(PORT, () => {
   console.log(`🔐 Auth endpoints:`);
   console.log(`   POST /api/auth/register - Register new user`);
   console.log(`   POST /api/auth/login - Login user`);
+  console.log(`   GET /api/auth/profile - Get user profile`);
 });
 
 export default app;
