@@ -1,0 +1,5 @@
+{
+  "watch": ["server.js", "routes/*.js", "utils/*.js", "db.js"],
+  "ignore": ["audios/*", "node_modules/*", "bin/*", "*.log", "*.mp3", "*.wav", "*.json"],
+  "ext": "js"
+}

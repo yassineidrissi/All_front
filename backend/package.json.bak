@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon --ignore audios/ --ignore node_modules/ --ignore '*.log' --ignore '*.mp3' --ignore '*.wav' --ignore '*.json' server.js",
+    "dev": "nodemon server.js",
     "db:setup": "psql -U postgres -d your_database -f schema.sql"
   },
   "keywords": [

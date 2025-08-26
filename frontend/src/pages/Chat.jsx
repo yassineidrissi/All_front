@@ -44,7 +44,7 @@ export default function Chat() {
         });
 
         try {
-            const res = await fetch(`${API_URL}/api/best_prompt`, {
+            const res = await fetch(`${API_URL}/api/auth/best_prompt`, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",
@@ -63,7 +63,7 @@ export default function Chat() {
             }
 
             const data = await res.json();
-
+            console.log("API response:", data);
             setOriginal({
                 prompt: data.original.prompt,
                 response: data.original.response,

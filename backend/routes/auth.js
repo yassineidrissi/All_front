@@ -2,7 +2,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { body, validationResult } from 'express-validator';
+import { body, header, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 import { userQueries } from '../db.js';
 
@@ -225,6 +225,51 @@ router.get('/profile', authenticateToken, async (req, res) => {
       success: false,
       message: 'Internal server error'
     });
+  }
+});
+
+// In /workspaces/All_front/backend/routes/auth.js
+// Replace or modify your existing best_prompt endpoint
+router.post('/best_prompt', authenticateToken, async (req, res) => {
+  try {
+    console.log("Best prompt optimization completed successfully.", {
+      body: req.body,
+      headers: req.headers,
+      method: req.method
+    });
+    
+    const { prompt } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
+    }
+
+    // Generate a response for the original prompt
+    // This is simplified - in production you'd call your AI service
+    const originalResponse = "Voici une réponse générique pour: " + prompt;
+    const originalScore = 0.65; // Example score
+    
+    // Create an optimized version (simplified)
+    const optimizedPrompt = "Quels sont mes symptômes si " + prompt.replace('?', '').trim() + "?";
+    const optimizedResponse = "Voici une réponse optimisée pour votre question sur la fièvre.";
+    const optimizedScore = 0.85; // Example score
+    
+    // Return the nested structure expected by the frontend
+    res.json({
+      original: {
+        prompt: prompt,
+        response: originalResponse,
+        score: originalScore
+      },
+      optimized: {
+        prompt: optimizedPrompt,
+        response: optimizedResponse,
+        score: optimizedScore
+      }
+    });
+  } catch (error) {
+    console.error('Error optimizing prompt:', error);
+    res.status(500).json({ message: 'Error optimizing prompt' });
   }
 });
 

@@ -1,0 +1,20 @@
+# Ignore directories
+audios/
+node_modules/
+Avatar_IA_Back_Server/
+.git/
+
+# Ignore files
+*.log
+*.mp3
+*.wav
+*.json
+!package.json
+!package-lock.json
+response.json
+out.mp3
+
+# Ignore temp files
+.DS_Store
+Thumbs.db
+.env
