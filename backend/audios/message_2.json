@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "soundFile": "/workspaces/All_front/backend/audios/message_2.wav",
+    "duration": 2.16
+  },
+  "mouthCues": [
+    { "start": 0.00, "end": 0.04, "value": "X" },
+    { "start": 0.04, "end": 0.10, "value": "B" },
+    { "start": 0.10, "end": 0.30, "value": "F" },
+    { "start": 0.30, "end": 0.37, "value": "B" },
+    { "start": 0.37, "end": 0.57, "value": "X" },
+    { "start": 0.57, "end": 0.79, "value": "B" },
+    { "start": 0.79, "end": 1.00, "value": "F" },
+    { "start": 1.00, "end": 1.07, "value": "B" },
+    { "start": 1.07, "end": 1.15, "value": "A" },
+    { "start": 1.15, "end": 1.35, "value": "F" },
+    { "start": 1.35, "end": 1.84, "value": "B" },
+    { "start": 1.84, "end": 2.16, "value": "X" }
+  ]
+}

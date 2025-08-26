@@ -229,32 +229,60 @@ router.get('/profile', authenticateToken, async (req, res) => {
 });
 
 // In /workspaces/All_front/backend/routes/auth.js
-// Replace or modify your existing best_prompt endpoint
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+// Replace or update your best_prompt endpoint
 router.post('/best_prompt', authenticateToken, async (req, res) => {
   try {
-    console.log("Best prompt optimization completed successfully.", {
-      body: req.body,
-      headers: req.headers,
-      method: req.method
-    });
-    
     const { prompt } = req.body;
     
     if (!prompt) {
       return res.status(400).json({ error: 'Prompt is required' });
     }
 
-    // Generate a response for the original prompt
-    // This is simplified - in production you'd call your AI service
-    const originalResponse = "Voici une réponse générique pour: " + prompt;
-    const originalScore = 0.65; // Example score
+    // Step 1: Generate a response for the original prompt
+    const originalCompletion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {role: "system", content: "Vous êtes un assistant médical qui répond aux questions des patients en français. Donnez des réponses concises et informatifs."},
+        {role: "user", content: prompt}
+      ],
+      max_tokens: 300
+    });
     
-    // Create an optimized version (simplified)
-    const optimizedPrompt = "Quels sont mes symptômes si " + prompt.replace('?', '').trim() + "?";
-    const optimizedResponse = "Voici une réponse optimisée pour votre question sur la fièvre.";
-    const optimizedScore = 0.85; // Example score
+    const originalResponse = originalCompletion.choices[0].message.content;
+    const originalScore = 0.65; // Simplified scoring
     
-    // Return the nested structure expected by the frontend
+    // Step 2: Generate an optimized prompt version
+    const promptOptimizerCompletion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {role: "system", content: "Vous êtes un expert qui reformule les questions médicales pour les rendre plus précises. Reformulez la question de l'utilisateur pour qu'elle soit plus spécifique et médicalement pertinente. Donnez uniquement la question reformulée, sans explications."},
+        {role: "user", content: prompt}
+      ],
+      max_tokens: 100
+    });
+    
+    const optimizedPrompt = promptOptimizerCompletion.choices[0].message.content;
+    
+    // Step 3: Generate a response for the optimized prompt
+    const optimizedCompletion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {role: "system", content: "Vous êtes un médecin expert qui répond aux questions des patients en français. Donnez des réponses concises, précises et informatives."},
+        {role: "user", content: optimizedPrompt}
+      ],
+      max_tokens: 300
+    });
+    
+    const optimizedResponse = optimizedCompletion.choices[0].message.content;
+    const optimizedScore = 0.85; // Simplified scoring
+    
+    // Return data in the expected format
     res.json({
       original: {
         prompt: prompt,
@@ -267,9 +295,13 @@ router.post('/best_prompt', authenticateToken, async (req, res) => {
         score: optimizedScore
       }
     });
+    
   } catch (error) {
     console.error('Error optimizing prompt:', error);
-    res.status(500).json({ message: 'Error optimizing prompt' });
+    res.status(500).json({ 
+      message: 'Error optimizing prompt',
+      error: error.message 
+    });
   }
 });
 
