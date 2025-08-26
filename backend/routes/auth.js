@@ -5,6 +5,8 @@ import jwt from 'jsonwebtoken';
 import { body, header, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 import { userQueries } from '../db.js';
+import { calculatePromptScore } from '../utils/scoring.js';
+
 
 const router = express.Router();
 
@@ -255,8 +257,9 @@ router.post('/best_prompt', authenticateToken, async (req, res) => {
     });
     
     const originalResponse = originalCompletion.choices[0].message.content;
-    const originalScore = 0.65; // Simplified scoring
-    
+    const originalScore = calculatePromptScore(prompt, originalResponse);
+
+// Then replace the hardcoded scores with calculated ones:    
     // Step 2: Generate an optimized prompt version
     const promptOptimizerCompletion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
@@ -280,7 +283,7 @@ router.post('/best_prompt', authenticateToken, async (req, res) => {
     });
     
     const optimizedResponse = optimizedCompletion.choices[0].message.content;
-    const optimizedScore = 0.85; // Simplified scoring
+    const optimizedScore = calculatePromptScore(optimizedPrompt, optimizedResponse);
     
     // Return data in the expected format
     res.json({

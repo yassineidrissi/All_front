@@ -1,41 +1,40 @@
 /**
- * Calculate a score for the prompt-response pair based on:
- * 1. Response length (normalized between 0-0.4)
- * 2. Vocabulary diversity (unique words / total words) (0-0.4)
- * 3. Prompt relevance (how many prompt words appear in response) (0-0.2)
- * @param {string} prompt - The input prompt
- * @param {string} response - The generated response
- * @returns {number} - Score between 0 and 1
+ * Calculate a quality score for a prompt based on various factors
+ * @param {string} prompt - The user prompt
+ * @param {string} response - The AI response
+ * @returns {number} Score between 0 and 1
  */
-export function calculateScore(prompt, response) {
-  // 1. Response length score (normalized, max 0.4)
-  const lengthScore = Math.min(response.length / 1000, 1) * 0.4;
+export function calculatePromptScore(prompt, response) {
+  // Simple but more realistic scoring algorithm
+  let score = 0.5; // Base score
   
-  // 2. Vocabulary diversity
-  const words = response.toLowerCase().split(/\W+/).filter(w => w.length > 0);
-  const uniqueWords = new Set(words);
-  const diversityScore = words.length > 0 
-    ? (uniqueWords.size / words.length) * 0.4
-    : 0;
+  // Length factors
+  if (prompt.length > 10) score += 0.1;
+  if (prompt.length > 20) score += 0.1;
+  if (prompt.includes('?')) score += 0.1;
   
-  // 3. Prompt relevance
-  const promptWords = new Set(
-    prompt.toLowerCase().split(/\W+/).filter(w => w.length > 3)
-  );
-  let relevantWords = 0;
-  
-  for (const word of promptWords) {
-    if (response.toLowerCase().includes(word)) {
-      relevantWords++;
+  // Content factors
+  const medicalTerms = ['symptômes', 'diagnostic', 'traitement', 'maladie', 'fièvre', 'douleur'];
+  for (const term of medicalTerms) {
+    if (prompt.toLowerCase().includes(term)) {
+      score += 0.05;
     }
   }
   
-  const relevanceScore = promptWords.size > 0
-    ? (relevantWords / promptWords.size) * 0.2
-    : 0;
+  // Response quality factors (simplified)
+  if (response.length > 100) score += 0.1;
   
-  // Calculate final score (0-1 range)
-  const finalScore = (lengthScore + diversityScore + relevanceScore).toFixed(2);
-  
-  return parseFloat(finalScore);
+  // Cap the score at 0.95
+  return Math.min(0.95, score);
+}
+
+/**
+ * Calculate a score for prompt-response pairs
+ * This function is used by chat.js
+ * @param {string} prompt - The user prompt
+ * @param {string} response - The AI response 
+ * @returns {number} Score between 0 and 1
+ */
+export function calculateScore(prompt, response) {
+  return calculatePromptScore(prompt, response);
 }
