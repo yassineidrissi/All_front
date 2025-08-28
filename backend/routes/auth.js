@@ -259,9 +259,6 @@ router.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-
-// In /workspaces/All_front/backend/routes/auth.js
-<<<<<<< HEAD
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -338,7 +335,7 @@ router.post('/best_prompt', authenticateToken, async (req, res) => {
     });
   }
 });
-=======
+
 // Replace or modify your existing best_prompt endpoint
 // router.post('/best_prompt', authenticateToken, async (req, res) => {
 //   try {
@@ -382,6 +379,5 @@ router.post('/best_prompt', authenticateToken, async (req, res) => {
 //     res.status(500).json({ message: 'Error optimizing prompt' });
 //   }
 // });
->>>>>>> 47b867a (update)
 
 export default router;
