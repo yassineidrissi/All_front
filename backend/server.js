@@ -28,8 +28,8 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
 // Routes
 app.use('/api/auth', authRouter);
-app.use('/', chatRouter); // This makes your chat endpoints available at the paths defined in chat.js
-app.use('/api/chat', authenticateToken, chatRouter); // Protect chat routes with auth
+app.use('/', authenticateToken, chatRouter); // This makes your chat endpoints available at the paths defined in chat.js
+// app.use('/api/chat', authenticateToken, chatRouter); // Protect chat routes with auth
 app.use('/api/tts', ttsRouter);
 
 // Protected route example

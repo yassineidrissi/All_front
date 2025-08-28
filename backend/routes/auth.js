@@ -204,6 +204,32 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
 });
 
 // Profile endpoint
+// router.get('/profile', authenticateToken, async (req, res) => {
+//   try {
+//     const user = await userQueries.findById(req.userId);
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'User not found'
+//       });
+//     }
+//     res.json({
+//       success: true,
+//       user: {
+//         id: user.id,
+//         email: user.email,
+//         name: user.name
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Profile fetch error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Internal server error'
+//     });
+//   }
+// });
+
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
     const user = await userQueries.findById(req.userId);
@@ -213,12 +239,15 @@ router.get('/profile', authenticateToken, async (req, res) => {
         message: 'User not found'
       });
     }
+
     res.json({
       success: true,
       user: {
         id: user.id,
         email: user.email,
-        name: user.name
+        name: user.name,
+        is_admin: user.is_admin,   // <-- add this
+        is_active: user.is_active  // optional if you want
       }
     });
   } catch (error) {
@@ -230,7 +259,9 @@ router.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+
 // In /workspaces/All_front/backend/routes/auth.js
+<<<<<<< HEAD
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -307,5 +338,50 @@ router.post('/best_prompt', authenticateToken, async (req, res) => {
     });
   }
 });
+=======
+// Replace or modify your existing best_prompt endpoint
+// router.post('/best_prompt', authenticateToken, async (req, res) => {
+//   try {
+//     console.log("Best prompt optimization completed successfully.", {
+//       body: req.body,
+//       headers: req.headers,
+//       method: req.method
+//     });
+
+//     const { prompt } = req.body;
+
+//     if (!prompt) {
+//       return res.status(400).json({ error: 'Prompt is required' });
+//     }
+
+//     // Generate a response for the original prompt
+//     // This is simplified - in production you'd call your AI service
+//     const originalResponse = "Voici une réponse générique pour: " + prompt;
+//     const originalScore = 0.65; // Example score
+
+//     // Create an optimized version (simplified)
+//     const optimizedPrompt = "Quels sont mes symptômes si " + prompt.replace('?', '').trim() + "?";
+//     const optimizedResponse = "Voici une réponse optimisée pour votre question sur la fièvre.";
+//     const optimizedScore = 0.85; // Example score
+
+//     // Return the nested structure expected by the frontend
+//     res.json({
+//       original: {
+//         prompt: prompt,
+//         response: originalResponse,
+//         score: originalScore
+//       },
+//       optimized: {
+//         prompt: optimizedPrompt,
+//         response: optimizedResponse,
+//         score: optimizedScore
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Error optimizing prompt:', error);
+//     res.status(500).json({ message: 'Error optimizing prompt' });
+//   }
+// });
+>>>>>>> 47b867a (update)
 
 export default router;

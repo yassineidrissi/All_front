@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import "../style.css";
 import logo from "../assets/logo.png";
 import { useAuth } from "../context/AuthContext";
 
-const API_URL =  "http://localhost:8000";
+const API_URL = "http://localhost:8000";
 
 export default function Chat() {
     const [prompt, setPrompt] = useState("");
@@ -46,16 +45,18 @@ export default function Chat() {
         try {
             const res = await fetch(`${API_URL}/api/auth/best_prompt`, {
                 method: "POST",
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` // Add auth token
+                    "Authorization": `Bearer ${token}` // send auth token
                 },
-                body: JSON.stringify({ prompt }),
+                body: JSON.stringify({
+                    prompt,
+                    userId: user?.id // ✅ Send the current user's ID
+                }),
             });
 
             if (!res.ok) {
                 if (res.status === 401) {
-                    // Token expired or invalid, logout user
                     logout();
                     return;
                 }
@@ -64,6 +65,7 @@ export default function Chat() {
 
             const data = await res.json();
             console.log("API response:", data);
+
             setOriginal({
                 prompt: data.original.prompt,
                 response: data.original.response,
@@ -76,14 +78,8 @@ export default function Chat() {
                 score: data.optimized.score,
             });
         } catch (err) {
-            setOriginal((prev) => ({
-                ...prev,
-                response: `Erreur: ${err.message}`,
-            }));
-            setOptimized((prev) => ({
-                ...prev,
-                response: "Une erreur est survenue lors de l'optimisation",
-            }));
+            setOriginal(prev => ({ ...prev, response: `Erreur: ${err.message}` }));
+            setOptimized(prev => ({ ...prev, response: "Une erreur est survenue lors de l'optimisation" }));
         } finally {
             setLoading(false);
             setPrompt("");
@@ -118,7 +114,7 @@ export default function Chat() {
                         <span style={{ color: '#666', fontSize: '0.9rem' }}>
                             Bonjour, {user?.name || 'Utilisateur'}
                         </span>
-                        <button 
+                        <button
                             onClick={handleLogout}
                             style={{
                                 padding: '6px 12px',

@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
+    is_admin BOOLEAN DEFAULT false,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -30,6 +31,6 @@ CREATE TRIGGER update_users_updated_at
 
 -- Insert sample admin user (password: 'admin123')
 -- You should change this password in production
-INSERT INTO users (email, password, name) VALUES 
-('admin@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj0kqQUU6/4m', 'Admin User')
+INSERT INTO users (email, password, name, is_admin) VALUES 
+('admin@example.com', '$2a$12$FkNzb5esydirarSyaHubfOKPFPitPiwvx2snN00sL74EWGVWgh0CS', 'Admin User', true)
 ON CONFLICT (email) DO NOTHING;

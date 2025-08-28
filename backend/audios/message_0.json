@@ -1,5 +1,6 @@
 {
   "metadata": {
+<<<<<<< HEAD
     "soundFile": "/workspaces/All_front/backend/audios/message_0.wav",
     "duration": 6.11
   },
@@ -45,5 +46,24 @@
     { "start": 5.72, "end": 5.79, "value": "C" },
     { "start": 5.79, "end": 5.86, "value": "B" },
     { "start": 5.86, "end": 6.11, "value": "X" }
+=======
+    "soundFile": "/home/jiatan/Desktop/yassine/yassine/backend/audios/message_0.wav",
+    "duration": 1.56
+  },
+  "mouthCues": [
+    { "start": 0.00, "end": 0.06, "value": "X" },
+    { "start": 0.06, "end": 0.13, "value": "B" },
+    { "start": 0.13, "end": 0.20, "value": "C" },
+    { "start": 0.20, "end": 0.27, "value": "B" },
+    { "start": 0.27, "end": 0.62, "value": "C" },
+    { "start": 0.62, "end": 0.76, "value": "F" },
+    { "start": 0.76, "end": 0.83, "value": "B" },
+    { "start": 0.83, "end": 0.97, "value": "C" },
+    { "start": 0.97, "end": 1.11, "value": "E" },
+    { "start": 1.11, "end": 1.18, "value": "F" },
+    { "start": 1.18, "end": 1.25, "value": "E" },
+    { "start": 1.25, "end": 1.46, "value": "B" },
+    { "start": 1.46, "end": 1.56, "value": "X" }
+>>>>>>> 47b867a (update)
   ]
 }

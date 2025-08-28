@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.png";
 import { useAuth } from "../context/AuthContext";
@@ -110,6 +109,36 @@ export default function Home() {
           >
             Chat Platform
           </Link>
+
+          {/* ✅ Show admin dashboard link only if user is admin */}
+          {user?.is_admin && (
+            <>
+              <div
+                className="info"
+                style={{ fontSize: "0.85rem", color: "#444", marginTop: "8px" }}
+              >
+                Admin Tools
+              </div>
+              <Link
+                className="btn ghost"
+                to="/admin/dashboard"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "12px 16px",
+                  borderRadius: "10px",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                  background: "transparent",
+                  color: "#d63384",
+                  border: "2px solid rgba(214,51,132,0.25)",
+                }}
+              >
+                ⚡ Admin Dashboard
+              </Link>
+            </>
+          )}
         </div>
       </section>
 
