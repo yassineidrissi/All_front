@@ -4,6 +4,9 @@
   "description": "Backend for Chat Scenario Platform",
   "main": "server.js",
   "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon --ignore audios/ --ignore node_modules/ --ignore '*.log' --ignore '*.mp3' --ignore '*.wav' --ignore '*.json' server.js",

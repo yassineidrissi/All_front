@@ -3,7 +3,7 @@ import "../style.css";
 import logo from "../assets/logo.png";
 import { useAuth } from "../context/AuthContext";
 
-const API_URL = "http://localhost:8000";
+const API_URL = "https://allfront-production.up.railway.app";
 
 export default function Chat() {
     const [prompt, setPrompt] = useState("");
