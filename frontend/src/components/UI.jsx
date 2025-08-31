@@ -73,7 +73,7 @@ export const UI = ({ hidden, ...props }) => {
 
         console.log("🚀 Sending simulation:", { promptText, timeSpent });
 
-        fetch("https://allfront-production.up.railway.app/api/auth/simulation", {
+        fetch(`${API_URL}/api/auth/simulation`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

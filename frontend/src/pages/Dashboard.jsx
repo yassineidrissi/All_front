@@ -21,7 +21,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const res = await fetch("https://allfront-production.up.railway.app/api/users/stats", {
+                const res = await fetch(`${API_URL}/api/users/stats`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

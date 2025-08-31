@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-const backendUrl = import.meta.env.VITE_API_URL || "https://allfront-production.up.railway.app/api/tts";
+const backendUrl = import.meta.env.API_URL || "https://allfront-production.up.railway.app/api/tts";
 
 const ChatContext = createContext();
 
