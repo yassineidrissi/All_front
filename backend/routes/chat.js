@@ -135,6 +135,38 @@ router.post('/api/auth/simulation', async (req, res) => {
     }
 });
 
+router.get('/api/simulations', async (req, res) => {
+    try {
+        const query = `
+            SELECT s.id, u.name, u.email, s.prompt, s.prompt_length, s.time_spent_seconds, s.created_at
+            FROM simulation_sessions s
+            JOIN users u ON u.id = s.user_id
+            ORDER BY s.created_at DESC
+        `;
+        const { rows } = await pool.query(query);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching simulations:', error);
+        res.status(500).json({ error: 'Failed to fetch simulations' });
+    }
+});
+
+router.get('/api/chats', async (req, res) => {
+    try {
+        const query = `
+            SELECT c.id, u.name, u.email, c.user_prompt, c.ai_prompt, c.user_score, c.ai_score, c.created_at
+            FROM chat_sessions c
+            JOIN users u ON u.id = c.user_id
+            ORDER BY c.created_at DESC
+        `;
+        const { rows } = await pool.query(query);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching chats:', error);
+        res.status(500).json({ error: 'Failed to fetch chats' });
+    }
+});
+
 router.get("/api/users/stats", async (req, res) => {
     try {
         const query = `
