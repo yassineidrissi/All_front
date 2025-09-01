@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
-const API_URL = import.meta.env.API_URL || "https://allfront-production.up.railway.app";
+const API_URL = import.meta.env.API_URL || "http://localhost:8000"; //|| "https://allfront-production.up.railway.app";
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
