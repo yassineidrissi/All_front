@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "../hooks/useChat";
 import { useAuth } from "../context/AuthContext";
+import { API_URL } from "../config";
 
 export const UI = ({ hidden, ...props }) => {
     const { user, logout, token } = useAuth();

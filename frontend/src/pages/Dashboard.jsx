@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Loader2 } from "lucide-react";
+import { API_URL } from "../config";
 
 export default function AdminDashboard() {
     const { user, token } = useAuth();
