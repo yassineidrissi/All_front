@@ -1,9 +1,7 @@
 // src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
+import { API_URL } from '../config';
 const AuthContext = createContext();
-
-const API_URL = import.meta.env.API_URL || "http://localhost:8000"; //|| "https://allfront-production.up.railway.app";
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

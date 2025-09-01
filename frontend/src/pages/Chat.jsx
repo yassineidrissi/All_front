@@ -2,8 +2,7 @@ import { useState } from "react";
 import "../style.css";
 import logo from "../assets/logo.png";
 import { useAuth } from "../context/AuthContext";
-
-const API_URL = import.meta.env.API_URL || "http://localhost:8000";
+import { API_URL } from "../config";
 
 export default function Chat() {
     const [prompt, setPrompt] = useState("");
