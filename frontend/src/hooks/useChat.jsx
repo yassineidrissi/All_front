@@ -1,22 +1,30 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-const backendUrl = import.meta.env.API_URL || "http://localhost:8000";
+import { API_URL } from "../config";
 
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
   const chat = async (message) => {
     setLoading(true);
-    const data = await fetch(`${backendUrl}/api/tts/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message }),
-    });
-    const resp = (await data.json()).messages;
-    setMessages((messages) => [...messages, ...resp]);
-    setLoading(false);
+    try {
+      const data = await fetch(`${API_URL}/api/tts/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      });
+
+      if (!data.ok) throw new Error(`Request failed with ${data.status}`);
+
+      const resp = (await data.json()).messages || [];
+      setMessages((messages) => [...messages, ...resp]);
+    } catch (err) {
+      console.error("Chat error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState();
