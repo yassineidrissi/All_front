@@ -1,2 +1,2 @@
 [build]
-nixpacksPkgs = ["ffmpeg", "curl"]
+nixpacksPkgs = ["ffmpeg"]
