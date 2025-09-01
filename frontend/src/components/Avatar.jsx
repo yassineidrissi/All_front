@@ -6,7 +6,7 @@ Command: npx gltfjsx@6.2.3 public/models/64f1a714fe61576b46f27ca2.glb -o src/com
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { button, useControls } from "leva";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import * as THREE from "three";
 import { useChat } from "../hooks/useChat";
@@ -135,20 +135,34 @@ export function Avatar(props) {
         }
     }, [message]);
 
-    const { animations } = useGLTF("/models/animations.glb");
+    const { animations: rawAnimations } = useGLTF("/models/animations.glb");
+
+    const animations = useMemo(
+        () =>
+            rawAnimations.map((clip) => {
+                const tracks = clip.tracks.filter((track) => {
+                    const nodeName = track.name.split(".")[0];
+                    return nodes[nodeName];
+                });
+                return new THREE.AnimationClip(clip.name, clip.duration, tracks);
+            }),
+        [rawAnimations, nodes]
+    );
 
     const group = useRef();
     const { actions, mixer } = useAnimations(animations, group);
     const [animation, setAnimation] = useState(
-        animations.find((a) => a.name === "Idle") ? "Idle" : animations[0].name // Check if Idle animation exists otherwise use first animation
+        animations.find((a) => a.name === "Idle") ? "Idle" : animations[0]?.name
     );
     useEffect(() => {
-        actions[animation]
+        const action = actions[animation];
+        if (!action) return;
+        action
             .reset()
             .fadeIn(mixer.stats.actions.inUse === 0 ? 0 : 0.5)
             .play();
-        return () => actions[animation].fadeOut(0.5);
-    }, [animation]);
+        return () => action.fadeOut(0.5);
+    }, [animation, actions, mixer]);
 
     const lerpMorphTarget = (target, value, speed = 0.1) => {
         scene.traverse((child) => {
