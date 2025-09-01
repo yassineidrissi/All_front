@@ -31,9 +31,12 @@ export default function AdminDashboard() {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
                 ]);
+                // Parse responses only if the request succeeded
+                const simData = simRes.ok ? await simRes.json() : [];
+                const chatData = chatRes.ok ? await chatRes.json() : [];
 
-                setSimulations(await simRes.json());
-                setChats(await chatRes.json());
+                setSimulations(Array.isArray(simData) ? simData : []);
+                setChats(Array.isArray(chatData) ? chatData : []);
             } catch (err) {
                 console.error("Failed to fetch dashboard data:", err);
             } finally {
