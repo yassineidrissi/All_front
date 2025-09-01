@@ -10,36 +10,42 @@ LABEL fly_launch_runtime="Node.js"
 WORKDIR /app
 
 # Set production environment
-ENV NODE_ENV="production"
+ENV NODE_ENV=production
 
+# --- Make ffmpeg available in every stage that uses "base" ---
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
 
-# Throw-away build stage to reduce size of final image
+# ---------- Build stage ----------
 FROM base AS build
 
-# Install packages needed to build node modules
+# Build deps only needed to compile native modules (if any)
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
       build-essential \
       node-gyp \
       pkg-config \
-      python-is-python3 \
-      ffmpeg && \
+      python-is-python3 && \
     rm -rf /var/lib/apt/lists/*
 
-# Install node modules
-COPY package-lock.json package.json ./
-RUN npm ci
+# Install deps
+COPY package.json package-lock.json ./
+# Use --omit=dev for smaller runtime if you don't need dev deps at runtime
+RUN npm ci --omit=dev
 
-# Copy application code
+# Copy app source
 COPY . .
 
+# ---------- Runtime stage ----------
+FROM base AS runner
 
-# Final stage for app image
-FROM base
-
-# Copy built application
+# Copy the built app (incl. node_modules) from the build stage
 COPY --from=build /app /app
 
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-CMD [ "npm", "run", "start" ]
+# Railway usually sets PORT; your server earlier logged on 8000, not 3000
+ENV PORT=8000
+EXPOSE 8000
+
+# Start the server (ensure "start" runs node server.js)
+CMD ["npm", "run", "start"]
