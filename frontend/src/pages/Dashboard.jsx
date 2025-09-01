@@ -31,7 +31,6 @@ export default function AdminDashboard() {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
                 ]);
-
                 // Parse responses only if the request succeeded
                 const simData = simRes.ok ? await simRes.json() : [];
                 const chatData = chatRes.ok ? await chatRes.json() : [];
