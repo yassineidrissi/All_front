@@ -1,13 +1,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-const backendUrl = import.meta.env.API_URL || "http://localhost/api/tts";
+const backendUrl = import.meta.env.API_URL || "http://localhost:8000";
 
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
   const chat = async (message) => {
     setLoading(true);
-    const data = await fetch(`${backendUrl}/chat`, {
+    const data = await fetch(`${backendUrl}/api/tts/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
