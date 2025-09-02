@@ -16,5 +16,7 @@ CREATE TABLE simulation_sessions (
     prompt TEXT,
     prompt_length INT,
     time_spent_seconds INT,
+    tfft_ms INT,
+    ipq_score NUMERIC(5,2),
     created_at TIMESTAMP DEFAULT NOW()
 );

@@ -100,7 +100,7 @@ router.post('/api/auth/best_prompt', async (req, res) => {
 
 router.post('/api/auth/simulation', async (req, res) => {
     try {
-        const { userId, prompt, timeSpentSeconds } = req.body;
+        const { userId, prompt, timeSpentSeconds, tfftMs, ipqScore } = req.body;
 
         if (!prompt || prompt.trim().length === 0) {
             return res.status(400).json({ error: 'Prompt is required' });
@@ -117,14 +117,14 @@ router.post('/api/auth/simulation', async (req, res) => {
         }
 
         await pool.query(
-            `INSERT INTO simulation_sessions (user_id, prompt, prompt_length, time_spent_seconds)
-             VALUES ($1, $2, $3, $4)`,
-            [userId, prompt, promptLength, timeSpentSeconds]
+            `INSERT INTO simulation_sessions (user_id, prompt, prompt_length, time_spent_seconds, tfft_ms, ipq_score)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [userId, prompt, promptLength, timeSpentSeconds, tfftMs ?? null, ipqScore ?? null]
         );
 
         res.json({
             success: true,
-            data: { userId, prompt, promptLength, timeSpentSeconds }
+            data: { userId, prompt, promptLength, timeSpentSeconds, tfftMs, ipqScore }
         });
 
     } catch (error) {
@@ -138,7 +138,7 @@ router.post('/api/auth/simulation', async (req, res) => {
 router.get('/api/simulations', async (req, res) => {
     try {
         const query = `
-            SELECT s.id, u.name, u.email, s.prompt, s.prompt_length, s.time_spent_seconds, s.created_at
+            SELECT s.id, u.name, u.email, s.prompt, s.prompt_length, s.time_spent_seconds, s.tfft_ms, s.ipq_score, s.created_at
             FROM simulation_sessions s
             JOIN users u ON u.id = s.user_id
             ORDER BY s.created_at DESC
