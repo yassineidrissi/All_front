@@ -152,32 +152,70 @@ export default function AdminDashboard() {
                     (Time to First Token) and the student’s sense of presence and involvement
                     (Igroup Presence Questionnaire)?
                 </p>
-                <ul className="list-disc list-inside space-y-2 text-gray-700 text-sm">
-                    <li>
-                        <strong>Prompt Length</strong> (independent variable): number of tokens or
-                        words in the user’s prompt.
-                    </li>
-                    <li>
-                        <strong>Prompt Structure</strong> (independent variable): categorical
-                        structure type of the prompt (e.g., question, narrative, or instruction
-                        with multiple steps).
-                    </li>
-                    <li>
-                        <strong>Time to First Token (TFFT)</strong> (dependent variable): latency
-                        from prompt submission to the first token of the model response, measured
-                        in seconds using system timestamps.
-                    </li>
-                    <li>
-                        <strong>Igroup Presence Questionnaire (IPQ) Score</strong> (dependent
-                        variable): participant’s presence and involvement score computed from the
-                        IPQ survey responses.
-                    </li>
-                    <li>
-                        <strong>Control Variables</strong>: participant’s prior familiarity with
-                        similar systems and device type, collected via pre-study questionnaire and
-                        used as covariates in analysis.
-                    </li>
-                </ul>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left text-gray-600">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                <th className="px-4 py-3">Variable</th>
+                                <th className="px-4 py-3">Role</th>
+                                <th className="px-4 py-3">Definition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td className="px-4 py-3 font-medium">Prompt Length</td>
+                                <td className="px-4 py-3">Independent</td>
+                                <td className="px-4 py-3">
+                                    Number of tokens or words in the user’s prompt.
+                                </td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                                <td className="px-4 py-3 font-medium">Prompt Structure</td>
+                                <td className="px-4 py-3">Independent</td>
+                                <td className="px-4 py-3">
+                                    Categorical type of the prompt (e.g., question, narrative,
+                                    or multi-step instruction).
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="px-4 py-3 font-medium">
+                                    Time to First Token (TFFT)
+                                </td>
+                                <td className="px-4 py-3">Dependent</td>
+                                <td className="px-4 py-3">
+                                    Seconds from prompt submission to the first token of the
+                                    model response measured via system timestamps.
+                                </td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                                <td className="px-4 py-3 font-medium">
+                                    Igroup Presence Questionnaire (IPQ) Score
+                                </td>
+                                <td className="px-4 py-3">Dependent</td>
+                                <td className="px-4 py-3">
+                                    Participant’s presence and involvement score computed from
+                                    IPQ survey responses.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="px-4 py-3 font-medium">Prior Familiarity</td>
+                                <td className="px-4 py-3">Control</td>
+                                <td className="px-4 py-3">
+                                    Participant’s self-reported familiarity with similar
+                                    systems collected in a pre-study questionnaire.
+                                </td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                                <td className="px-4 py-3 font-medium">Device Type</td>
+                                <td className="px-4 py-3">Control</td>
+                                <td className="px-4 py-3">
+                                    Type of device used (e.g., desktop, tablet, mobile) noted
+                                    during the study.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
