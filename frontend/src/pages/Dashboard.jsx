@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Loader2 } from "lucide-react";
 import { API_URL } from "../config";
+import "../style.css";
 
 export default function AdminDashboard() {
     const { user, token } = useAuth();
-    const [users, setUsers] = useState([]);
+    const [simulations, setSimulations] = useState([]);
+    const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Protect admin route
     if (!user || !user.is_admin) {
         return (
             <div className="flex items-center justify-center h-screen">
@@ -20,23 +21,30 @@ export default function AdminDashboard() {
     }
 
     useEffect(() => {
-        const fetchUsers = async () => {
+        const fetchData = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/users/stats`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                const data = await res.json();
-                setUsers(data);
+                const [simRes, chatRes] = await Promise.all([
+                    fetch(`${API_URL}/api/simulations`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                    fetch(`${API_URL}/api/chats`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                ]);
+                // Parse responses only if the request succeeded
+                const simData = simRes.ok ? await simRes.json() : [];
+                const chatData = chatRes.ok ? await chatRes.json() : [];
+
+                setSimulations(Array.isArray(simData) ? simData : []);
+                setChats(Array.isArray(chatData) ? chatData : []);
             } catch (err) {
-                console.error("Failed to fetch user stats:", err);
+                console.error("Failed to fetch dashboard data:", err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchUsers();
+        fetchData();
     }, [token]);
 
     if (loading) {
@@ -47,64 +55,131 @@ export default function AdminDashboard() {
         );
     }
 
+    const renderPrompt = (text) =>
+        text && text.length > 50 ? `${text.slice(0, 50)}...` : text;
+
     return (
-        <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">
+        <div className="min-h-screen p-6" style={{ background: "var(--bg-light)" }}>
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">
                 Admin Dashboard
             </h1>
 
-            <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
-                <table className="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-                    <thead className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100">
+            <div className="overflow-x-auto bg-white rounded-2xl shadow-lg mb-10">
+                <h2 className="text-xl font-semibold px-4 py-3 border-b">
+                    Simulation Sessions
+                </h2>
+                <table className="w-full text-sm text-left text-gray-600">
+                    <thead className="bg-gray-100">
                         <tr>
-                            <th className="px-4 py-3">Name</th>
+                            <th className="px-4 py-3">User</th>
                             <th className="px-4 py-3">Email</th>
-                            <th className="px-4 py-3">Chat Sessions</th>
-                            <th className="px-4 py-3">Avg User Score</th>
-                            <th className="px-4 py-3">Avg AI Score</th>
-                            <th className="px-4 py-3">Simulations</th>
-                            <th className="px-4 py-3">Prompt Length</th>
-                            <th className="px-4 py-3">Time Spent</th>
-                            <th className="px-4 py-3">Active</th>
+                            <th className="px-4 py-3">Prompt</th>
+                            <th className="px-4 py-3">Length</th>
+                            <th className="px-4 py-3">Time Spent (s)</th>
+                            <th className="px-4 py-3">Created</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {users.map((u) => (
+                        {simulations.map((s) => (
                             <tr
-                                key={u.id}
-                                className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                key={s.id}
+                                className="border-b border-gray-200 hover:bg-gray-50"
                             >
-                                <td className="px-4 py-3 font-medium">{u.name}</td>
-                                <td className="px-4 py-3">{u.email}</td>
-                                <td className="px-4 py-3">{u.total_chat_sessions}</td>
+                                <td className="px-4 py-3 font-medium">{s.name}</td>
+                                <td className="px-4 py-3">{s.email}</td>
+                                <td className="px-4 py-3">{renderPrompt(s.prompt)}</td>
+                                <td className="px-4 py-3">{s.prompt_length}</td>
+                                <td className="px-4 py-3">{s.time_spent_seconds}</td>
                                 <td className="px-4 py-3">
-                                    {u.avg_user_score !== null && !isNaN(u.avg_user_score)
-                                        ? Number(u.avg_user_score).toFixed(2)
-                                        : "N/A"}
-                                </td>
-                                <td className="px-4 py-3">
-                                    {u.avg_ai_score !== null && !isNaN(u.avg_ai_score)
-                                        ? Number(u.avg_ai_score).toFixed(2)
-                                        : "N/A"}
-                                </td>
-                                <td className="px-4 py-3">{u.total_simulations}</td>
-                                <td className="px-4 py-3">{u.total_prompt_length}</td>
-                                <td className="px-4 py-3">{u.formatted_time_spent}</td>
-                                <td className="px-4 py-3">
-                                    <span
-                                        className={`px-2 py-1 text-xs rounded-full ${u.is_active
-                                                ? "bg-green-100 text-green-700"
-                                                : "bg-red-100 text-red-700"
-                                            }`}
-                                    >
-                                        {u.is_active ? "Active" : "Inactive"}
-                                    </span>
+                                    {new Date(s.created_at).toLocaleString()}
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+
+            <div className="overflow-x-auto bg-white rounded-2xl shadow-lg">
+                <h2 className="text-xl font-semibold px-4 py-3 border-b">
+                    Chat Sessions
+                </h2>
+                <table className="w-full text-sm text-left text-gray-600">
+                    <thead className="bg-gray-100">
+                        <tr>
+                            <th className="px-4 py-3">User</th>
+                            <th className="px-4 py-3">Email</th>
+                            <th className="px-4 py-3">User Prompt</th>
+                            <th className="px-4 py-3">AI Prompt</th>
+                            <th className="px-4 py-3">User Score</th>
+                            <th className="px-4 py-3">AI Score</th>
+                            <th className="px-4 py-3">Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {chats.map((c) => (
+                            <tr
+                                key={c.id}
+                                className="border-b border-gray-200 hover:bg-gray-50"
+                            >
+                                <td className="px-4 py-3 font-medium">{c.name}</td>
+                                <td className="px-4 py-3">{c.email}</td>
+                                <td className="px-4 py-3">{renderPrompt(c.user_prompt)}</td>
+                                <td className="px-4 py-3">{renderPrompt(c.ai_prompt)}</td>
+                                <td className="px-4 py-3">
+                                    {c.user_score !== null && !isNaN(c.user_score)
+                                        ? Number(c.user_score).toFixed(2)
+                                        : "N/A"}
+                                </td>
+                                <td className="px-4 py-3">
+                                    {c.ai_score !== null && !isNaN(c.ai_score)
+                                        ? Number(c.ai_score).toFixed(2)
+                                        : "N/A"}
+                                </td>
+                                <td className="px-4 py-3">
+                                    {new Date(c.created_at).toLocaleString()}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <div className="mt-10 overflow-x-auto bg-white rounded-2xl shadow-lg p-6">
+                <h2 className="text-xl font-semibold mb-4">
+                    Prompt Study Variables
+                </h2>
+                <p className="mb-4 text-gray-700">
+                    Research question: How do prompt length and prompt structure affect latency
+                    (Time to First Token) and the student’s sense of presence and involvement
+                    (Igroup Presence Questionnaire)?
+                </p>
+                <ul className="list-disc list-inside space-y-2 text-gray-700 text-sm">
+                    <li>
+                        <strong>Prompt Length</strong> (independent variable): number of tokens or
+                        words in the user’s prompt.
+                    </li>
+                    <li>
+                        <strong>Prompt Structure</strong> (independent variable): categorical
+                        structure type of the prompt (e.g., question, narrative, or instruction
+                        with multiple steps).
+                    </li>
+                    <li>
+                        <strong>Time to First Token (TFFT)</strong> (dependent variable): latency
+                        from prompt submission to the first token of the model response, measured
+                        in seconds using system timestamps.
+                    </li>
+                    <li>
+                        <strong>Igroup Presence Questionnaire (IPQ) Score</strong> (dependent
+                        variable): participant’s presence and involvement score computed from the
+                        IPQ survey responses.
+                    </li>
+                    <li>
+                        <strong>Control Variables</strong>: participant’s prior familiarity with
+                        similar systems and device type, collected via pre-study questionnaire and
+                        used as covariates in analysis.
+                    </li>
+                </ul>
+            </div>
         </div>
     );
 }
+
