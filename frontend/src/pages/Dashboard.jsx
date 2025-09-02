@@ -76,6 +76,8 @@ export default function AdminDashboard() {
                             <th className="px-4 py-3">Prompt</th>
                             <th className="px-4 py-3">Length</th>
                             <th className="px-4 py-3">Time Spent (s)</th>
+                            <th className="px-4 py-3">TFFT (ms)</th>
+                            <th className="px-4 py-3">IPQ Score</th>
                             <th className="px-4 py-3">Created</th>
                         </tr>
                     </thead>
@@ -90,6 +92,8 @@ export default function AdminDashboard() {
                                 <td className="px-4 py-3">{renderPrompt(s.prompt)}</td>
                                 <td className="px-4 py-3">{s.prompt_length}</td>
                                 <td className="px-4 py-3">{s.time_spent_seconds}</td>
+                                <td className="px-4 py-3">{s.tfft_ms ?? 'N/A'}</td>
+                                <td className="px-4 py-3">{s.ipq_score ?? 'N/A'}</td>
                                 <td className="px-4 py-3">
                                     {new Date(s.created_at).toLocaleString()}
                                 </td>
@@ -142,6 +146,80 @@ export default function AdminDashboard() {
                         ))}
                     </tbody>
                 </table>
+            </div>
+            <div className="mt-10 overflow-x-auto bg-white rounded-2xl shadow-lg p-6">
+                <h2 className="text-xl font-semibold mb-4">
+                    Prompt Study Variables
+                </h2>
+                <p className="mb-4 text-gray-700">
+                    Research question: How do prompt length and prompt structure affect latency
+                    (Time to First Token) and the student’s sense of presence and involvement
+                    (Igroup Presence Questionnaire)?
+                </p>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left text-gray-600">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                <th className="px-4 py-3">Variable</th>
+                                <th className="px-4 py-3">Role</th>
+                                <th className="px-4 py-3">Definition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td className="px-4 py-3 font-medium">Prompt Length</td>
+                                <td className="px-4 py-3">Independent</td>
+                                <td className="px-4 py-3">
+                                    Number of tokens or words in the user’s prompt.
+                                </td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                                <td className="px-4 py-3 font-medium">Prompt Structure</td>
+                                <td className="px-4 py-3">Independent</td>
+                                <td className="px-4 py-3">
+                                    Categorical type of the prompt (e.g., question, narrative,
+                                    or multi-step instruction).
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="px-4 py-3 font-medium">
+                                    Time to First Token (TFFT)
+                                </td>
+                                <td className="px-4 py-3">Dependent</td>
+                                <td className="px-4 py-3">
+                                    Seconds from prompt submission to the first token of the
+                                    model response measured via system timestamps.
+                                </td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                                <td className="px-4 py-3 font-medium">
+                                    Igroup Presence Questionnaire (IPQ) Score
+                                </td>
+                                <td className="px-4 py-3">Dependent</td>
+                                <td className="px-4 py-3">
+                                    Participant’s presence and involvement score computed from
+                                    IPQ survey responses.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="px-4 py-3 font-medium">Prior Familiarity</td>
+                                <td className="px-4 py-3">Control</td>
+                                <td className="px-4 py-3">
+                                    Participant’s self-reported familiarity with similar
+                                    systems collected in a pre-study questionnaire.
+                                </td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                                <td className="px-4 py-3 font-medium">Device Type</td>
+                                <td className="px-4 py-3">Control</td>
+                                <td className="px-4 py-3">
+                                    Type of device used (e.g., desktop, tablet, mobile) noted
+                                    during the study.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
