@@ -76,6 +76,8 @@ export default function AdminDashboard() {
                             <th className="px-4 py-3">Prompt</th>
                             <th className="px-4 py-3">Length</th>
                             <th className="px-4 py-3">Time Spent (s)</th>
+                            <th className="px-4 py-3">TFFT (ms)</th>
+                            <th className="px-4 py-3">IPQ Score</th>
                             <th className="px-4 py-3">Created</th>
                         </tr>
                     </thead>
@@ -90,6 +92,8 @@ export default function AdminDashboard() {
                                 <td className="px-4 py-3">{renderPrompt(s.prompt)}</td>
                                 <td className="px-4 py-3">{s.prompt_length}</td>
                                 <td className="px-4 py-3">{s.time_spent_seconds}</td>
+                                <td className="px-4 py-3">{s.tfft_ms ?? 'N/A'}</td>
+                                <td className="px-4 py-3">{s.ipq_score ?? 'N/A'}</td>
                                 <td className="px-4 py-3">
                                     {new Date(s.created_at).toLocaleString()}
                                 </td>
