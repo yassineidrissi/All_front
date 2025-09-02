@@ -143,6 +143,42 @@ export default function AdminDashboard() {
                     </tbody>
                 </table>
             </div>
+            <div className="mt-10 overflow-x-auto bg-white rounded-2xl shadow-lg p-6">
+                <h2 className="text-xl font-semibold mb-4">
+                    Prompt Study Variables
+                </h2>
+                <p className="mb-4 text-gray-700">
+                    Research question: How do prompt length and prompt structure affect latency
+                    (Time to First Token) and the student’s sense of presence and involvement
+                    (Igroup Presence Questionnaire)?
+                </p>
+                <ul className="list-disc list-inside space-y-2 text-gray-700 text-sm">
+                    <li>
+                        <strong>Prompt Length</strong> (independent variable): number of tokens or
+                        words in the user’s prompt.
+                    </li>
+                    <li>
+                        <strong>Prompt Structure</strong> (independent variable): categorical
+                        structure type of the prompt (e.g., question, narrative, or instruction
+                        with multiple steps).
+                    </li>
+                    <li>
+                        <strong>Time to First Token (TFFT)</strong> (dependent variable): latency
+                        from prompt submission to the first token of the model response, measured
+                        in seconds using system timestamps.
+                    </li>
+                    <li>
+                        <strong>Igroup Presence Questionnaire (IPQ) Score</strong> (dependent
+                        variable): participant’s presence and involvement score computed from the
+                        IPQ survey responses.
+                    </li>
+                    <li>
+                        <strong>Control Variables</strong>: participant’s prior familiarity with
+                        similar systems and device type, collected via pre-study questionnaire and
+                        used as covariates in analysis.
+                    </li>
+                </ul>
+            </div>
         </div>
     );
 }
