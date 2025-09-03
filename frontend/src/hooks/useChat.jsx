@@ -1,14 +1,16 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 import { API_URL } from "../config";
+import { measureTFFT } from "../metrics/latency.ts";
 
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
   const chat = async (message) => {
     setLoading(true);
+    let tfft = null;
     try {
-      const data = await fetch(`${API_URL}/api/tts/chat`, {
+      const { tfftMs, fullText } = await measureTFFT(`${API_URL}/api/tts/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -16,15 +18,16 @@ export const ChatProvider = ({ children }) => {
         body: JSON.stringify({ message }),
       });
 
-      if (!data.ok) throw new Error(`Request failed with ${data.status}`);
+      tfft = tfftMs;
 
-      const resp = (await data.json()).messages || [];
+      const resp = (JSON.parse(fullText).messages) || [];
       setMessages((messages) => [...messages, ...resp]);
     } catch (err) {
       console.error("Chat error:", err);
     } finally {
       setLoading(false);
     }
+    return tfft;
   };
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState();
