@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useChat } from "../hooks/useChat";
 import { useAuth } from "../context/AuthContext";
 import { API_URL } from "../config";
+import { scoreIPQ } from "../metrics/ipq.ts";
 
 export const UI = ({ hidden, ...props }) => {
     const { user, logout, token } = useAuth();
@@ -16,6 +17,7 @@ export const UI = ({ hidden, ...props }) => {
 
     // Track last prompt (typed or spoken)
     const lastPromptRef = useRef("");
+    const lastTfftRef = useRef(null);
 
     // Stop listening when avatar starts speaking
     useEffect(() => {
@@ -27,7 +29,8 @@ export const UI = ({ hidden, ...props }) => {
         return () => {
             const endTime = Date.now();
             const timeSpent = Math.floor((endTime - startTime) / 1000);
-            if (lastPromptRef.current) saveSimulation(lastPromptRef.current, timeSpent);
+            if (lastPromptRef.current)
+                saveSimulation(lastPromptRef.current, timeSpent, lastTfftRef.current, computeIpqScore());
         };
     }, [startTime]);
 
@@ -49,13 +52,14 @@ export const UI = ({ hidden, ...props }) => {
         recog.maxAlternatives = 1;
         recog.lang = "fr-FR";
 
-        recog.onresult = (e) => {
+        recog.onresult = async (e) => {
             const transcript = e.results[e.results.length - 1][0].transcript.trim();
             console.log("🎙️ Transcript:", transcript);
 
             stopListening();
-            chat(transcript);
-            saveSimulation(transcript);
+            const tfft = await chat(transcript);
+            lastTfftRef.current = tfft;
+            saveSimulation(transcript, undefined, tfft, computeIpqScore());
         };
 
         recog.onend = () => setListening(false);
@@ -66,13 +70,13 @@ export const UI = ({ hidden, ...props }) => {
         recog.start();
     };
 
-    const saveSimulation = (promptText, forcedTimeSpent) => {
+    const saveSimulation = (promptText, forcedTimeSpent, tfftMs, ipqScore) => {
         lastPromptRef.current = promptText;
 
         const endTime = Date.now();
         const timeSpent = forcedTimeSpent ?? Math.floor((endTime - startTime) / 1000);
 
-        console.log("🚀 Sending simulation:", { promptText, timeSpent });
+        console.log("🚀 Sending simulation:", { promptText, timeSpent, tfftMs, ipqScore });
 
         fetch(`${API_URL}/api/auth/simulation`, {
             method: "POST",
@@ -84,16 +88,30 @@ export const UI = ({ hidden, ...props }) => {
                 userId: user?.id,  // ✅ dynamic userId from context
                 prompt: promptText,
                 timeSpentSeconds: Number(timeSpent),
+                tfftMs,
+                ipqScore,
             }),
         }).catch((err) => console.error("Simulation save error:", err));
     };
 
+    const computeIpqScore = () => {
+        const answers = { G1: 5, SP2: 4, REAL3: 3, INV1: 5, INV2: 4, INV3: 5, INV4: 3 };
+        const { presencePct, involvementPct } = scoreIPQ(answers, {
+            presenceItems: ["G1", "SP2", "REAL3"],
+            involvementItems: ["INV1", "INV2", "INV3", "INV4"],
+            reversed: ["REAL3"],
+            scale: "1-7",
+        });
+        return Number(((presencePct + involvementPct) / 2).toFixed(2));
+    };
 
-    const sendMessage = () => {
+
+    const sendMessage = async () => {
         const text = input.current.value.trim();
         if (!loading && !message && text) {
-            chat(text);
-            saveSimulation(text);
+            const tfft = await chat(text);
+            lastTfftRef.current = tfft;
+            saveSimulation(text, undefined, tfft, computeIpqScore());
             input.current.value = "";
         }
     };

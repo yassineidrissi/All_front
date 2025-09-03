@@ -8,6 +8,7 @@ import authRouter, { authenticateToken } from './routes/auth.js';
 import chatRouter from './routes/chat.js';
 import { testConnection } from './db.js';
 import ttsRouter from './routes/tts.js';
+import evalRouter from './routes/eval.js';
 
 // Load environment variables
 dotenv.config();
@@ -28,6 +29,7 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
 // Routes
 app.use('/api/auth', authRouter);
+app.use('/', evalRouter);
 app.use('/api/tts', ttsRouter);
 app.use('/', authenticateToken, chatRouter); // This makes your chat endpoints available at the paths defined in chat.js
 // app.use('/api/chat', authenticateToken, chatRouter); // Protect chat routes with auth

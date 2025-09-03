@@ -4,6 +4,7 @@ import { exec } from "child_process";
 import voice from "elevenlabs-node";
 import OpenAI from "openai";
 import dotenv from "dotenv";
+import tfftMiddleware from "../metrics/streamingTfft.js";
 
 dotenv.config();
 
@@ -69,7 +70,7 @@ ttsRouter.get("/test-tts", async (req, res) => {
 });
 
 // Main chat route
-ttsRouter.post("/chat", async (req, res) => {
+ttsRouter.post("/chat", tfftMiddleware, async (req, res) => {
     const userMessage = req.body.message;
 
     if (!userMessage) {
