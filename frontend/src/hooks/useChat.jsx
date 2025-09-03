@@ -6,6 +6,12 @@ import { measureTFFT } from "../metrics/latency.ts";
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
+  const [condition, setCondition] = useState({
+    promptLength: "short",
+    promptStructure: "spikes",
+    emotion: "on",
+  });
+
   const chat = async (message) => {
     setLoading(true);
     let tfft = null;
@@ -15,7 +21,12 @@ export const ChatProvider = ({ children }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({
+          message,
+          prompt_length: condition.promptLength,
+          prompt_structure: condition.promptStructure,
+          emotion: condition.emotion,
+        }),
       });
 
       tfft = tfftMs;
@@ -54,6 +65,8 @@ export const ChatProvider = ({ children }) => {
         loading,
         cameraZoomed,
         setCameraZoomed,
+        condition,
+        setCondition,
       }}
     >
       {children}

@@ -1,0 +1,3 @@
+participant_id,prompt_length,prompt_structure,emotion,ipq_presence,ipq_involvement
+P01,short,spikes,on,4.5,4.3
+P01,long,libre,off,3.8,3.7

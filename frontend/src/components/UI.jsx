@@ -8,7 +8,7 @@ export const UI = ({ hidden, ...props }) => {
     const { user, logout, token } = useAuth();
 
     const input = useRef();
-    const { chat, loading, cameraZoomed, setCameraZoomed, message } = useChat();
+    const { chat, loading, cameraZoomed, setCameraZoomed, message, condition, setCondition } = useChat();
     const [listening, setListening] = useState(false);
     const recognitionRef = useRef(null);
 
@@ -127,8 +127,44 @@ export const UI = ({ hidden, ...props }) => {
                 <span className="text-lg font-semibold text-chaptal-purple">Fondation Léonie Chaptal</span>
             </div>
 
-            {/* Auxiliary buttons */}
+            {/* Auxiliary buttons + Q1 condition controls */}
             <div className="w-full flex flex-col items-end justify-center gap-4 pointer-events-auto">
+                <div className="bg-white bg-opacity-50 backdrop-blur-md p-4 rounded-md flex flex-col gap-2 text-xs">
+                    <label className="flex items-center gap-2">
+                        <span>Longueur</span>
+                        <select
+                            value={condition.promptLength}
+                            onChange={(e) => setCondition({ ...condition, promptLength: e.target.value })}
+                            className="border rounded p-1"
+                        >
+                            <option value="short">Court</option>
+                            <option value="long">Long</option>
+                        </select>
+                    </label>
+                    <label className="flex items-center gap-2">
+                        <span>Structure</span>
+                        <select
+                            value={condition.promptStructure}
+                            onChange={(e) => setCondition({ ...condition, promptStructure: e.target.value })}
+                            className="border rounded p-1"
+                        >
+                            <option value="spikes">SPIKES</option>
+                            <option value="libre">Libre</option>
+                        </select>
+                    </label>
+                    <label className="flex items-center gap-2">
+                        <span>Émotion</span>
+                        <select
+                            value={condition.emotion}
+                            onChange={(e) => setCondition({ ...condition, emotion: e.target.value })}
+                            className="border rounded p-1"
+                        >
+                            <option value="on">On</option>
+                            <option value="off">Off</option>
+                        </select>
+                    </label>
+                </div>
+
                 <button
                     onClick={() => setCameraZoomed(!cameraZoomed)}
                     className="bg-chaptal-green hover:bg-chaptal-green-dark text-white p-4 rounded-md"
