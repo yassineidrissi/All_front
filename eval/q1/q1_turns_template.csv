@@ -1,0 +1,4 @@
+participant_id,condition_id,prompt_length,prompt_structure,emotion,t_req_tx_ms,t_audio_play_start_ms,tfft_ms
+P01,short_spikes_on,short,spikes,on,0,520,520
+P01,short_spikes_on,short,spikes,on,1100,1620,520
+P01,long_libre_off,long,libre,off,0,780,780
