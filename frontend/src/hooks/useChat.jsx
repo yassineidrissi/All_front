@@ -12,7 +12,12 @@ export const ChatProvider = ({ children }) => {
     emotion: "on",
   });
 
-  const chat = async (message) => {
+  const chat = async (prompt) => {
+    if (!prompt || prompt.trim() === "") {
+      console.warn("Chat called without a message");
+      return null;
+    }
+
     setLoading(true);
     let tfft = null;
     try {
@@ -22,7 +27,7 @@ export const ChatProvider = ({ children }) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message,
+          message: prompt,
           prompt_length: condition.promptLength,
           prompt_structure: condition.promptStructure,
           emotion: condition.emotion,

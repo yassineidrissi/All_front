@@ -73,18 +73,8 @@ ttsRouter.get("/test-tts", async (req, res) => {
 ttsRouter.post("/chat", tfftMiddleware, async (req, res) => {
     const userMessage = req.body.message;
 
-    if (!userMessage) {
-        return res.send({
-            messages: [
-                {
-                    text: "Coucou mon amour... Comment s'est passée ta journée ?",
-                    audio: await audioFileToBase64("audios/intro_0.wav"),
-                    lipsync: await readJsonTranscript("audios/intro_0.json"),
-                    facialExpression: "smile",
-                    animation: "Talking_1",
-                },
-            ],
-        });
+    if (typeof userMessage !== "string" || userMessage.trim() === "") {
+        return res.status(400).json({ error: "Message is required." });
     }
 
     if (!elevenLabsApiKey || !openai.apiKey) {
