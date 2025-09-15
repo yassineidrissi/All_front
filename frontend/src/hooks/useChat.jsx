@@ -5,6 +5,7 @@ import { API_URL } from "../config";
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
+  const [timings, setTimings] = useState(null);
   const chat = async (message) => {
     setLoading(true);
     try {
@@ -18,8 +19,12 @@ export const ChatProvider = ({ children }) => {
 
       if (!data.ok) throw new Error(`Request failed with ${data.status}`);
 
-      const resp = (await data.json()).messages || [];
+      const json = await data.json();
+      const resp = json.messages || [];
       setMessages((messages) => [...messages, ...resp]);
+      setTimings(json.timings || null);
+      if (json.timings) console.log("⏱️ Timing data:", json.timings);
+      return json.timings;
     } catch (err) {
       console.error("Chat error:", err);
     } finally {
@@ -51,6 +56,7 @@ export const ChatProvider = ({ children }) => {
         loading,
         cameraZoomed,
         setCameraZoomed,
+        timings,
       }}
     >
       {children}

@@ -7,12 +7,16 @@ export const UI = ({ hidden, ...props }) => {
     const { user, logout, token } = useAuth();
 
     const input = useRef();
-    const { chat, loading, cameraZoomed, setCameraZoomed, message } = useChat();
+    const { chat, loading, cameraZoomed, setCameraZoomed, message, timings } = useChat();
     const [listening, setListening] = useState(false);
     const recognitionRef = useRef(null);
 
     // Track start time for simulation
     const [startTime] = useState(Date.now());
+    const latestTimingsRef = useRef(null);
+    useEffect(() => {
+        latestTimingsRef.current = timings;
+    }, [timings]);
 
     // Track last prompt (typed or spoken)
     const lastPromptRef = useRef("");
@@ -27,7 +31,8 @@ export const UI = ({ hidden, ...props }) => {
         return () => {
             const endTime = Date.now();
             const timeSpent = Math.floor((endTime - startTime) / 1000);
-            if (lastPromptRef.current) saveSimulation(lastPromptRef.current, timeSpent);
+            if (lastPromptRef.current)
+                saveSimulation(lastPromptRef.current, timeSpent, latestTimingsRef.current);
         };
     }, [startTime]);
 
@@ -49,13 +54,13 @@ export const UI = ({ hidden, ...props }) => {
         recog.maxAlternatives = 1;
         recog.lang = "fr-FR";
 
-        recog.onresult = (e) => {
+        recog.onresult = async (e) => {
             const transcript = e.results[e.results.length - 1][0].transcript.trim();
             console.log("🎙️ Transcript:", transcript);
 
             stopListening();
-            chat(transcript);
-            saveSimulation(transcript);
+            const t = await chat(transcript);
+            saveSimulation(transcript, undefined, t);
         };
 
         recog.onend = () => setListening(false);
@@ -66,13 +71,14 @@ export const UI = ({ hidden, ...props }) => {
         recog.start();
     };
 
-    const saveSimulation = (promptText, forcedTimeSpent) => {
+    const saveSimulation = (promptText, forcedTimeSpent, timingData) => {
         lastPromptRef.current = promptText;
 
         const endTime = Date.now();
         const timeSpent = forcedTimeSpent ?? Math.floor((endTime - startTime) / 1000);
+        const ipqScore = localStorage.getItem("ipqScore");
 
-        console.log("🚀 Sending simulation:", { promptText, timeSpent });
+        console.log("🚀 Sending simulation:", { promptText, timeSpent, timingData, ipqScore });
 
         fetch(`${API_URL}/api/auth/simulation`, {
             method: "POST",
@@ -84,16 +90,18 @@ export const UI = ({ hidden, ...props }) => {
                 userId: user?.id,  // ✅ dynamic userId from context
                 prompt: promptText,
                 timeSpentSeconds: Number(timeSpent),
+                timings: timingData,
+                ipqScore: ipqScore ? Number(ipqScore) : null,
             }),
         }).catch((err) => console.error("Simulation save error:", err));
     };
 
 
-    const sendMessage = () => {
+    const sendMessage = async () => {
         const text = input.current.value.trim();
         if (!loading && !message && text) {
-            chat(text);
-            saveSimulation(text);
+            const t = await chat(text);
+            saveSimulation(text, undefined, t);
             input.current.value = "";
         }
     };

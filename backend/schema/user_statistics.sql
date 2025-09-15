@@ -16,5 +16,12 @@ CREATE TABLE simulation_sessions (
     prompt TEXT,
     prompt_length INT,
     time_spent_seconds INT,
+    openai_ms INT,
+    elevenlabs_ms INT,
+    lip_sync_ms INT,
+    audio_encode_ms INT,
+    transcript_ms INT,
+    tfft_ms INT,
+    ipq_score INT,
     created_at TIMESTAMP DEFAULT NOW()
 );

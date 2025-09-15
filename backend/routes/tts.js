@@ -83,6 +83,7 @@ ttsRouter.post("/chat", async (req, res) => {
                     animation: "Talking_1",
                 },
             ],
+            timings: null,
         });
     }
 
@@ -97,10 +98,22 @@ ttsRouter.post("/chat", async (req, res) => {
                     animation: "Idle",
                 },
             ],
+            timings: null,
         });
     }
 
+    const startTime = Date.now();
+    const timings = {
+        openai_ms: 0,
+        elevenlabs_ms: 0,
+        lip_sync_ms: 0,
+        audio_encode_ms: 0,
+        transcript_ms: 0,
+        tfft_ms: 0,
+    };
+
     // Generate response with OpenAI
+    const openaiStart = Date.now();
     const completion = await openai.chat.completions.create({
         model: "gpt-4.1",
         max_tokens: 1000,
@@ -118,6 +131,7 @@ ttsRouter.post("/chat", async (req, res) => {
             { role: "user", content: userMessage },
         ],
     });
+    timings.openai_ms = Date.now() - openaiStart;
 
     let messages = JSON.parse(completion.choices[0].message.content);
     if (messages.messages) messages = messages.messages;
@@ -126,14 +140,26 @@ ttsRouter.post("/chat", async (req, res) => {
         const msg = messages[i];
         const fileName = `audios/message_${i}.mp3`;
 
+        const elevenlabsStart = Date.now();
         await voice.textToSpeech(elevenLabsApiKey, voiceID, fileName, msg.text);
-        await lipSyncMessage(i);
+        timings.elevenlabs_ms += Date.now() - elevenlabsStart;
 
+        const lipSyncStart = Date.now();
+        await lipSyncMessage(i);
+        timings.lip_sync_ms += Date.now() - lipSyncStart;
+
+        const audioEncodeStart = Date.now();
         msg.audio = await audioFileToBase64(fileName);
+        timings.audio_encode_ms += Date.now() - audioEncodeStart;
+
+        const transcriptStart = Date.now();
         msg.lipsync = await readJsonTranscript(`audios/message_${i}.json`);
+        timings.transcript_ms += Date.now() - transcriptStart;
     }
 
-    res.send({ messages });
+    timings.tfft_ms = Date.now() - startTime;
+
+    res.send({ messages, timings });
 });
 
 export default ttsRouter;
