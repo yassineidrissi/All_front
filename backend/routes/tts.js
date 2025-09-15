@@ -100,7 +100,8 @@ ttsRouter.post("/chat", async (req, res) => {
         });
     }
 
-    // Generate response with OpenAI
+    // Generate response with OpenAI and measure timing
+    const openAiStart = Date.now();
     const completion = await openai.chat.completions.create({
         model: "gpt-4.1",
         max_tokens: 1000,
@@ -118,22 +119,47 @@ ttsRouter.post("/chat", async (req, res) => {
             { role: "user", content: userMessage },
         ],
     });
+    const openAiMs = Date.now() - openAiStart;
 
     let messages = JSON.parse(completion.choices[0].message.content);
     if (messages.messages) messages = messages.messages;
+
+    let elevenLabsMs = 0;
+    let lipSyncMs = 0;
+    let audioEncodeMs = 0;
+    let transcriptMs = 0;
 
     for (let i = 0; i < messages.length; i++) {
         const msg = messages[i];
         const fileName = `audios/message_${i}.mp3`;
 
+        const ttsStart = Date.now();
         await voice.textToSpeech(elevenLabsApiKey, voiceID, fileName, msg.text);
-        await lipSyncMessage(i);
+        elevenLabsMs += Date.now() - ttsStart;
 
+        const lipStart = Date.now();
+        await lipSyncMessage(i);
+        lipSyncMs += Date.now() - lipStart;
+
+        const audioStart = Date.now();
         msg.audio = await audioFileToBase64(fileName);
+        audioEncodeMs += Date.now() - audioStart;
+
+        const transcriptStart = Date.now();
         msg.lipsync = await readJsonTranscript(`audios/message_${i}.json`);
+        transcriptMs += Date.now() - transcriptStart;
     }
 
-    res.send({ messages });
+    res.send({
+        messages,
+        timings: {
+            openAiMs,
+            elevenLabsMs,
+            lipSyncMs,
+            audioEncodeMs,
+            transcriptMs,
+        },
+    });
 });
 
 export default ttsRouter;

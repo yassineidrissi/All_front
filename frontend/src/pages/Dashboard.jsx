@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useChat } from "../hooks/useChat";
 import { Loader2 } from "lucide-react";
 import { API_URL } from "../config";
 import "../style.css";
 
 export default function AdminDashboard() {
     const { user, token } = useAuth();
+    const { timings } = useChat();
     const [simulations, setSimulations] = useState([]);
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -64,6 +66,23 @@ export default function AdminDashboard() {
                 Admin Dashboard
             </h1>
 
+            <div className="mb-10 bg-white rounded-2xl shadow-lg p-4">
+                <h2 className="text-xl font-semibold mb-2">
+                    Latest API Timings (ms)
+                </h2>
+                {timings ? (
+                    <ul className="list-disc list-inside text-gray-700">
+                        <li>OpenAI: {timings.openAiMs}</li>
+                        <li>ElevenLabs: {timings.elevenLabsMs}</li>
+                        <li>Lip Sync: {timings.lipSyncMs}</li>
+                        <li>Audio Encoding: {timings.audioEncodeMs}</li>
+                        <li>Transcript: {timings.transcriptMs}</li>
+                    </ul>
+                ) : (
+                    <p className="text-gray-500">No timing data yet.</p>
+                )}
+            </div>
+
             <div className="overflow-x-auto bg-white rounded-2xl shadow-lg mb-10">
                 <h2 className="text-xl font-semibold px-4 py-3 border-b">
                     Simulation Sessions
@@ -78,6 +97,11 @@ export default function AdminDashboard() {
                             <th className="px-4 py-3">Time Spent (s)</th>
                             <th className="px-4 py-3">TFFT (ms)</th>
                             <th className="px-4 py-3">IPQ Score</th>
+                            <th className="px-4 py-3">OpenAI (ms)</th>
+                            <th className="px-4 py-3">ElevenLabs (ms)</th>
+                            <th className="px-4 py-3">Lip Sync (ms)</th>
+                            <th className="px-4 py-3">Audio Encode (ms)</th>
+                            <th className="px-4 py-3">Transcript (ms)</th>
                             <th className="px-4 py-3">Created</th>
                         </tr>
                     </thead>
@@ -94,6 +118,11 @@ export default function AdminDashboard() {
                                 <td className="px-4 py-3">{s.time_spent_seconds}</td>
                                 <td className="px-4 py-3">{s.tfft_ms ?? 'N/A'}</td>
                                 <td className="px-4 py-3">{s.ipq_score ?? 'N/A'}</td>
+                                <td className="px-4 py-3">{s.openai_ms ?? 'N/A'}</td>
+                                <td className="px-4 py-3">{s.elevenlabs_ms ?? 'N/A'}</td>
+                                <td className="px-4 py-3">{s.lip_sync_ms ?? 'N/A'}</td>
+                                <td className="px-4 py-3">{s.audio_encode_ms ?? 'N/A'}</td>
+                                <td className="px-4 py-3">{s.transcript_ms ?? 'N/A'}</td>
                                 <td className="px-4 py-3">
                                     {new Date(s.created_at).toLocaleString()}
                                 </td>
