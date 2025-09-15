@@ -76,6 +76,12 @@ export default function AdminDashboard() {
                             <th className="px-4 py-3">Prompt</th>
                             <th className="px-4 py-3">Length</th>
                             <th className="px-4 py-3">Time Spent (s)</th>
+                            <th className="px-4 py-3">OpenAI (ms)</th>
+                            <th className="px-4 py-3">ElevenLabs (ms)</th>
+                            <th className="px-4 py-3">Lip-Sync (ms)</th>
+                            <th className="px-4 py-3">Audio Encode (ms)</th>
+                            <th className="px-4 py-3">Transcript (ms)</th>
+                            <th className="px-4 py-3">TFFT (ms)</th>
                             <th className="px-4 py-3">Created</th>
                         </tr>
                     </thead>
@@ -90,6 +96,12 @@ export default function AdminDashboard() {
                                 <td className="px-4 py-3">{renderPrompt(s.prompt)}</td>
                                 <td className="px-4 py-3">{s.prompt_length}</td>
                                 <td className="px-4 py-3">{s.time_spent_seconds}</td>
+                                <td className="px-4 py-3">{s.openai_ms}</td>
+                                <td className="px-4 py-3">{s.elevenlabs_ms}</td>
+                                <td className="px-4 py-3">{s.lip_sync_ms}</td>
+                                <td className="px-4 py-3">{s.audio_encode_ms}</td>
+                                <td className="px-4 py-3">{s.transcript_ms}</td>
+                                <td className="px-4 py-3">{s.tfft_ms}</td>
                                 <td className="px-4 py-3">
                                     {new Date(s.created_at).toLocaleString()}
                                 </td>

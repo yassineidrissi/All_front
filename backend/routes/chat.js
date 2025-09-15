@@ -100,7 +100,7 @@ router.post('/api/auth/best_prompt', async (req, res) => {
 
 router.post('/api/auth/simulation', async (req, res) => {
     try {
-        const { userId, prompt, timeSpentSeconds } = req.body;
+        const { userId, prompt, timeSpentSeconds, timings = {}, ipqScore } = req.body;
 
         if (!prompt || prompt.trim().length === 0) {
             return res.status(400).json({ error: 'Prompt is required' });
@@ -116,15 +116,50 @@ router.post('/api/auth/simulation', async (req, res) => {
             return res.status(401).json({ error: 'User ID is required (from JWT or body)' });
         }
 
+        const {
+            openai_ms = null,
+            elevenlabs_ms = null,
+            lip_sync_ms = null,
+            audio_encode_ms = null,
+            transcript_ms = null,
+            tfft_ms = null,
+        } = timings;
+
         await pool.query(
-            `INSERT INTO simulation_sessions (user_id, prompt, prompt_length, time_spent_seconds)
-             VALUES ($1, $2, $3, $4)`,
-            [userId, prompt, promptLength, timeSpentSeconds]
+            `INSERT INTO simulation_sessions (user_id, prompt, prompt_length, time_spent_seconds, openai_ms, elevenlabs_ms, lip_sync_ms, audio_encode_ms, transcript_ms, tfft_ms, ipq_score)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+            [
+                userId,
+                prompt,
+                promptLength,
+                timeSpentSeconds,
+                openai_ms,
+                elevenlabs_ms,
+                lip_sync_ms,
+                audio_encode_ms,
+                transcript_ms,
+                tfft_ms,
+                ipqScore ?? null,
+            ]
         );
 
         res.json({
             success: true,
-            data: { userId, prompt, promptLength, timeSpentSeconds }
+            data: {
+                userId,
+                prompt,
+                promptLength,
+                timeSpentSeconds,
+                timings: {
+                    openai_ms,
+                    elevenlabs_ms,
+                    lip_sync_ms,
+                    audio_encode_ms,
+                    transcript_ms,
+                    tfft_ms,
+                },
+                ipqScore: ipqScore ?? null,
+            }
         });
 
     } catch (error) {
@@ -138,7 +173,9 @@ router.post('/api/auth/simulation', async (req, res) => {
 router.get('/api/simulations', async (req, res) => {
     try {
         const query = `
-            SELECT s.id, u.name, u.email, s.prompt, s.prompt_length, s.time_spent_seconds, s.created_at
+            SELECT s.id, u.name, u.email, s.prompt, s.prompt_length, s.time_spent_seconds,
+                   s.openai_ms, s.elevenlabs_ms, s.lip_sync_ms, s.audio_encode_ms, s.transcript_ms, s.tfft_ms,
+                   s.ipq_score, s.created_at
             FROM simulation_sessions s
             JOIN users u ON u.id = s.user_id
             ORDER BY s.created_at DESC
