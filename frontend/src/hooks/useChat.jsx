@@ -18,8 +18,13 @@ export const ChatProvider = ({ children }) => {
 
       if (!data.ok) throw new Error(`Request failed with ${data.status}`);
 
-      const resp = (await data.json()).messages || [];
+      const json = await data.json();
+      const resp = json.messages || [];
       setMessages((messages) => [...messages, ...resp]);
+      if (json.timings) {
+        setTimings(json.timings);
+        console.log("⏱️ API timings:", json.timings);
+      }
     } catch (err) {
       console.error("Chat error:", err);
     } finally {
@@ -30,6 +35,7 @@ export const ChatProvider = ({ children }) => {
   const [message, setMessage] = useState();
   const [loading, setLoading] = useState(false);
   const [cameraZoomed, setCameraZoomed] = useState(true);
+  const [timings, setTimings] = useState(null);
   const onMessagePlayed = () => {
     setMessages((messages) => messages.slice(1));
   };
@@ -51,6 +57,7 @@ export const ChatProvider = ({ children }) => {
         loading,
         cameraZoomed,
         setCameraZoomed,
+        timings,
       }}
     >
       {children}

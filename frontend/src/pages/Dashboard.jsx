@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useChat } from "../hooks/useChat";
 import { Loader2 } from "lucide-react";
 import { API_URL } from "../config";
 import "../style.css";
 
 export default function AdminDashboard() {
     const { user, token } = useAuth();
+    const { timings } = useChat();
     const [simulations, setSimulations] = useState([]);
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -63,6 +65,23 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-bold text-gray-800 mb-6">
                 Admin Dashboard
             </h1>
+
+            <div className="mb-10 bg-white rounded-2xl shadow-lg p-4">
+                <h2 className="text-xl font-semibold mb-2">
+                    Latest API Timings (ms)
+                </h2>
+                {timings ? (
+                    <ul className="list-disc list-inside text-gray-700">
+                        <li>OpenAI: {timings.openAiMs}</li>
+                        <li>ElevenLabs: {timings.elevenLabsMs}</li>
+                        <li>Lip Sync: {timings.lipSyncMs}</li>
+                        <li>Audio Encoding: {timings.audioEncodeMs}</li>
+                        <li>Transcript: {timings.transcriptMs}</li>
+                    </ul>
+                ) : (
+                    <p className="text-gray-500">No timing data yet.</p>
+                )}
+            </div>
 
             <div className="overflow-x-auto bg-white rounded-2xl shadow-lg mb-10">
                 <h2 className="text-xl font-semibold px-4 py-3 border-b">
