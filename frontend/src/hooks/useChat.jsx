@@ -31,6 +31,39 @@ export const ChatProvider = ({ children }) => {
       setLoading(false);
     }
   };
+  const saveSimulation = async (
+    prompt,
+    timeSpentSeconds,
+    timingData,
+    token,
+    userId
+  ) => {
+    const ipqScore = localStorage.getItem("ipqScore");
+    console.log("🚀 Sending simulation:", {
+      prompt,
+      timeSpentSeconds,
+      timingData,
+      ipqScore,
+    });
+    try {
+      await fetch(`${API_URL}/api/auth/simulation`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          userId,
+          prompt,
+          timeSpentSeconds: Number(timeSpentSeconds),
+          timings: timingData,
+          ipqScore: ipqScore ? Number(ipqScore) : null,
+        }),
+      });
+    } catch (err) {
+      console.error("Simulation save error:", err);
+    }
+  };
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState();
   const [loading, setLoading] = useState(false);
@@ -57,6 +90,7 @@ export const ChatProvider = ({ children }) => {
         cameraZoomed,
         setCameraZoomed,
         timings,
+        saveSimulation,
       }}
     >
       {children}

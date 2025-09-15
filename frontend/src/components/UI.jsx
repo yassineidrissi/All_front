@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "../hooks/useChat";
 import { useAuth } from "../context/AuthContext";
-import { API_URL } from "../config";
 
 export const UI = ({ hidden, ...props }) => {
     const { user, logout, token } = useAuth();
 
     const input = useRef();
-    const { chat, loading, cameraZoomed, setCameraZoomed, message, timings } = useChat();
+    const { chat, loading, cameraZoomed, setCameraZoomed, message, timings, saveSimulation } = useChat();
     const [listening, setListening] = useState(false);
     const recognitionRef = useRef(null);
 
@@ -32,7 +31,7 @@ export const UI = ({ hidden, ...props }) => {
             const endTime = Date.now();
             const timeSpent = Math.floor((endTime - startTime) / 1000);
             if (lastPromptRef.current)
-                saveSimulation(lastPromptRef.current, timeSpent, latestTimingsRef.current);
+                recordSimulation(lastPromptRef.current, timeSpent, latestTimingsRef.current);
         };
     }, [startTime]);
 
@@ -60,7 +59,7 @@ export const UI = ({ hidden, ...props }) => {
 
             stopListening();
             const t = await chat(transcript);
-            saveSimulation(transcript, undefined, t);
+            recordSimulation(transcript, undefined, t);
         };
 
         recog.onend = () => setListening(false);
@@ -71,29 +70,11 @@ export const UI = ({ hidden, ...props }) => {
         recog.start();
     };
 
-    const saveSimulation = (promptText, forcedTimeSpent, timingData) => {
+    const recordSimulation = (promptText, forcedTimeSpent, timingData) => {
         lastPromptRef.current = promptText;
-
         const endTime = Date.now();
         const timeSpent = forcedTimeSpent ?? Math.floor((endTime - startTime) / 1000);
-        const ipqScore = localStorage.getItem("ipqScore");
-
-        console.log("🚀 Sending simulation:", { promptText, timeSpent, timingData, ipqScore });
-
-        fetch(`${API_URL}/api/auth/simulation`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                userId: user?.id,  // ✅ dynamic userId from context
-                prompt: promptText,
-                timeSpentSeconds: Number(timeSpent),
-                timings: timingData,
-                ipqScore: ipqScore ? Number(ipqScore) : null,
-            }),
-        }).catch((err) => console.error("Simulation save error:", err));
+        saveSimulation(promptText, timeSpent, timingData, token, user?.id);
     };
 
 
@@ -101,7 +82,7 @@ export const UI = ({ hidden, ...props }) => {
         const text = input.current.value.trim();
         if (!loading && !message && text) {
             const t = await chat(text);
-            saveSimulation(text, undefined, t);
+            recordSimulation(text, undefined, t);
             input.current.value = "";
         }
     };
