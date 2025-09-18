@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import backgroundImage from '../assets/Fondation_background.png';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -66,8 +67,15 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center px-4">
-      <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg w-full max-w-md transition-colors">
+    <div
+      className="relative min-h-screen flex items-center justify-center px-4 py-10"
+      style={{
+        backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.65)), url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-8 rounded-2xl shadow-xl w-full max-w-md transition-colors">
         <h2 className="text-3xl font-bold text-center mb-6 text-gray-800 dark:text-white">
           {isLogin ? 'Welcome Back 👋' : 'Create an Account'}
         </h2>

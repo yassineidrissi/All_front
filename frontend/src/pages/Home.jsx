@@ -12,24 +12,39 @@ export default function Home() {
   };
 
   return (
-    <main
-      className="wrap"
-      role="main"
-      aria-label="Home"
+    <div
       style={{
-        width: "min(980px,94%)",
-        background: "#fff",
-        borderRadius: "12px",
-        boxShadow: "0 10px 30px rgba(35,31,58,0.08)",
-        padding: "28px",
-        display: "grid",
-        gridTemplateColumns: "1fr 320px",
-        gap: "24px",
+        minHeight: "100vh",
+        width: "100%",
+        display: "flex",
         alignItems: "center",
+        justifyContent: "center",
+        padding: "48px 16px",
+        backgroundImage:
+          "linear-gradient(135deg, rgba(231, 240, 255, 0.9) 0%, rgba(245, 238, 255, 0.95) 50%, rgba(232, 244, 250, 0.9) 100%)",
       }}
     >
-      {/* HERO SECTION */}
-      <section className="hero" style={{ padding: "8px 16px" }}>
+      <main
+        className="wrap"
+        role="main"
+        aria-label="Home"
+        style={{
+          width: "min(1040px,94%)",
+          margin: "0 auto",
+          background: "rgba(255,255,255,0.95)",
+          borderRadius: "16px",
+          boxShadow: "0 25px 60px rgba(31, 38, 135, 0.15)",
+          padding: "36px",
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr) 320px",
+          gap: "28px",
+          alignItems: "stretch",
+          backdropFilter: "blur(6px)",
+          border: "1px solid rgba(255,255,255,0.6)",
+        }}
+      >
+        {/* HERO SECTION */}
+        <section className="hero" style={{ padding: "8px 16px" }}>
         <img src={logo} alt="Logo" className="logo" style={{ maxHeight: "56px" }} />
         <h1 style={{ margin: "0 0 8px", color: "#4b1d8f", fontSize: "1.4rem" }}>
           Plateforme P-2
@@ -148,7 +163,7 @@ export default function Home() {
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "12px",
+          gap: "16px",
           alignItems: "stretch",
         }}
       >
@@ -221,45 +236,73 @@ export default function Home() {
         </div>
 
         {/* Notes */}
-        <div style={{ padding: "12px", background: "#fbfbfe", borderRadius: "8px" }}>
-          <strong>Notes</strong>
-          <p style={{ margin: "8px 0 0", color: "#666", fontSize: "0.92rem" }}>
-            - If you run a static server from repo root, open <code>/</code>.
-            <br />
-            - If backend serves root, ensure it serves this page.
+        <div
+          style={{
+            padding: "18px",
+            background: "linear-gradient(160deg, rgba(243, 245, 255, 0.95), rgba(237, 248, 255, 0.95))",
+            borderRadius: "12px",
+            border: "1px solid rgba(111, 136, 255, 0.18)",
+            boxShadow: "0 12px 30px rgba(79, 70, 229, 0.08)",
+            color: "#394150",
+          }}
+        >
+          <h3 style={{ margin: 0, fontSize: "1.05rem", color: "#4338ca" }}>Notes</h3>
+          <p style={{ margin: "12px 0", fontSize: "0.9rem", lineHeight: 1.6 }}>
+            Plateforme P-2 combine des simulations immersives et un outil de chat pour le
+            feedback réflexif. Utilisez ces espaces pour préparer vos sessions, capturer des
+            observations et suivre les indicateurs clés du tableau de bord administrateur.
           </p>
+          <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "#312e81" }}>
+            Aperçu des données suivies :
+          </div>
+          <ul style={{ margin: "10px 0 0", padding: "0 0 0 18px", fontSize: "0.88rem", lineHeight: 1.6 }}>
+            <li style={{ marginBottom: "6px" }}>
+              <strong>Sessions de simulation :</strong> suivi du prompt, de la durée passée et des
+              temps de réponse (OpenAI, ElevenLabs, synchronisation labiale).
+            </li>
+            <li style={{ marginBottom: "6px" }}>
+              <strong>Sessions de chat :</strong> comparaison des prompts utilisateur et IA, ainsi que
+              les scores de feedback attribués par chaque partie.
+            </li>
+            <li>
+              <strong>Variables d'étude :</strong> longueur du prompt, temps vers le premier token
+              (TFFT) et score IPQ pour analyser la présence et l'engagement des utilisateurs.
+            </li>
+          </ul>
         </div>
 
         {/* Quick commands */}
         <div
           style={{
-            padding: "12px",
-            background: "#fff",
-            borderRadius: "8px",
-            border: "1px solid #f0eff8",
-            color: "#666",
+            padding: "16px",
+            background: "rgba(255,255,255,0.9)",
+            borderRadius: "12px",
+            border: "1px solid rgba(229, 231, 235, 0.8)",
+            color: "#4b5563",
             fontSize: "0.88rem",
+            boxShadow: "0 10px 22px rgba(15, 23, 42, 0.08)",
           }}
         >
-          Quick commands:
+          <div style={{ fontWeight: 600, color: "#1f2937" }}>Commandes rapides</div>
           <pre
             style={{
-              margin: "8px 0 0",
+              margin: "10px 0 0",
               fontSize: "0.82rem",
-              lineHeight: "1.3",
-              color: "#222",
-              background: "transparent",
-              border: 0,
-              padding: 0,
+              lineHeight: "1.45",
+              color: "#1f2937",
+              background: "rgba(241, 245, 249, 0.65)",
+              borderRadius: "8px",
+              padding: "12px",
             }}
           >
-            {`# serve root with http-server
+            {`# Lancer un serveur statique à la racine
 npx http-server -p 8080
 
-# or with backend (Express) ensure it serves /index.html`}
+# Veiller à servir /index.html côté backend (Express)`}
           </pre>
         </div>
       </aside>
     </main>
+    </div>
   );
 }
