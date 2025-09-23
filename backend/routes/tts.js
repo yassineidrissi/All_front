@@ -29,6 +29,28 @@ const lipSyncMessage = async (message) => {
     );
 };
 
+const deleteIfExists = async (filePath) => {
+    try {
+        await fs.unlink(filePath);
+    } catch (error) {
+        if (error.code !== "ENOENT") {
+            throw error;
+        }
+    }
+};
+
+const fileExists = async (filePath) => {
+    try {
+        await fs.access(filePath);
+        return true;
+    } catch (error) {
+        if (error.code === "ENOENT") {
+            return false;
+        }
+        throw error;
+    }
+};
+
 const readJsonTranscript = async (file) => {
     const data = await fs.readFile(file, "utf8");
     return JSON.parse(data);
@@ -102,64 +124,95 @@ ttsRouter.post("/chat", async (req, res) => {
         });
     }
 
-    const startTime = Date.now();
-    const timings = {
-        openai_ms: 0,
-        elevenlabs_ms: 0,
-        lip_sync_ms: 0,
-        audio_encode_ms: 0,
-        transcript_ms: 0,
-        tfft_ms: 0,
-    };
+    try {
+        await fs.mkdir("audios", { recursive: true });
 
-    // Generate response with OpenAI
-    const openaiStart = Date.now();
-    const completion = await openai.chat.completions.create({
-        model: "gpt-4.1",
-        max_tokens: 1000,
-        temperature: 0.6,
-        response_format: { type: "json_object" },
-        messages: [
-            {
-                role: "system",
-                content: `
+        const startTime = Date.now();
+        const timings = {
+            openai_ms: 0,
+            elevenlabs_ms: 0,
+            lip_sync_ms: 0,
+            audio_encode_ms: 0,
+            transcript_ms: 0,
+            tfft_ms: 0,
+        };
+
+        // Generate response with OpenAI
+        const openaiStart = Date.now();
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4.1",
+            max_tokens: 1000,
+            temperature: 0.6,
+            response_format: { type: "json_object" },
+            messages: [
+                {
+                    role: "system",
+                    content: `
           You are a virtual girlfriend.
           Always reply with JSON array of up to 3 messages.
           Each has text, facialExpression, and animation.
         `,
-            },
-            { role: "user", content: userMessage },
-        ],
-    });
-    timings.openai_ms = Date.now() - openaiStart;
+                },
+                { role: "user", content: userMessage },
+            ],
+        });
+        timings.openai_ms = Date.now() - openaiStart;
 
-    let messages = JSON.parse(completion.choices[0].message.content);
-    if (messages.messages) messages = messages.messages;
+        let messages = JSON.parse(completion.choices[0].message.content);
+        if (messages.messages) messages = messages.messages;
 
-    for (let i = 0; i < messages.length; i++) {
-        const msg = messages[i];
-        const fileName = `audios/message_${i}.mp3`;
+        for (let i = 0; i < messages.length; i++) {
+            const msg = messages[i];
+            const fileName = `audios/message_${i}.mp3`;
 
-        const elevenlabsStart = Date.now();
-        await voice.textToSpeech(elevenLabsApiKey, voiceID, fileName, msg.text);
-        timings.elevenlabs_ms += Date.now() - elevenlabsStart;
+            await deleteIfExists(fileName);
+            await deleteIfExists(`audios/message_${i}.wav`);
+            await deleteIfExists(`audios/message_${i}.json`);
 
-        const lipSyncStart = Date.now();
-        await lipSyncMessage(i);
-        timings.lip_sync_ms += Date.now() - lipSyncStart;
+            const elevenlabsStart = Date.now();
+            let ttsResult;
+            try {
+                ttsResult = await voice.textToSpeech(
+                    elevenLabsApiKey,
+                    voiceID,
+                    fileName,
+                    msg.text
+                );
+            } catch (error) {
+                console.error("ElevenLabs TTS error:", error);
+            }
+            timings.elevenlabs_ms += Date.now() - elevenlabsStart;
 
-        const audioEncodeStart = Date.now();
-        msg.audio = await audioFileToBase64(fileName);
-        timings.audio_encode_ms += Date.now() - audioEncodeStart;
+            const audioGenerated =
+                (ttsResult && ttsResult.status === "ok") || (await fileExists(fileName));
 
-        const transcriptStart = Date.now();
-        msg.lipsync = await readJsonTranscript(`audios/message_${i}.json`);
-        timings.transcript_ms += Date.now() - transcriptStart;
+            if (!audioGenerated) {
+                msg.audio = null;
+                msg.lipsync = null;
+                msg.ttsError = true;
+                continue;
+            }
+
+            const lipSyncStart = Date.now();
+            await lipSyncMessage(i);
+            timings.lip_sync_ms += Date.now() - lipSyncStart;
+
+            const audioEncodeStart = Date.now();
+            msg.audio = await audioFileToBase64(fileName);
+            timings.audio_encode_ms += Date.now() - audioEncodeStart;
+
+            const transcriptStart = Date.now();
+            msg.lipsync = await readJsonTranscript(`audios/message_${i}.json`);
+            timings.transcript_ms += Date.now() - transcriptStart;
+        }
+
+        timings.tfft_ms = Date.now() - startTime;
+
+        res.send({ messages, timings });
+    } catch (error) {
+        console.error("Chat generation error:", error);
+        res.status(500).send({ error: "Unable to generate chat response" });
     }
-
-    timings.tfft_ms = Date.now() - startTime;
-
-    res.send({ messages, timings });
 });
 
 export default ttsRouter;
