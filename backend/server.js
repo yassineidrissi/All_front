@@ -26,11 +26,17 @@ app.use(morgan('combined')); // Logging
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
+// Public landing route (useful for quick checks)
+app.get('/', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Backend is running' });
+});
+
 // Routes
 app.use('/api/auth', authRouter);
 app.use('/api/tts', ttsRouter);
-app.use('/', authenticateToken, chatRouter); // This makes your chat endpoints available at the paths defined in chat.js
-// app.use('/api/chat', authenticateToken, chatRouter); // Protect chat routes with auth
+// Mount chat-related routes under /api to avoid intercepting other routes
+app.use('/api', authenticateToken, chatRouter);
+// app.use('/api/chat', authenticateToken, chatRouter); // Alternative namespace if desired
 
 // Protected route example
 app.get('/api/protected', authenticateToken, (req, res) => {
