@@ -381,7 +381,6 @@ ttsRouter.post("/chat", async (req, res) => {
             }
 
             msg.ttsProvider = synthesisResult.provider;
-
             const lipSyncStart = Date.now();
             await lipSyncMessage(i);
             timings.lip_sync_ms += Date.now() - lipSyncStart;
