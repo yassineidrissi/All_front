@@ -9,7 +9,8 @@ const openai = new OpenAI({
 
 const router = express.Router()
 
-router.post('/api/auth/best_prompt', async (req, res) => {
+// Mounted under '/api' in server.js
+router.post('/auth/best_prompt', async (req, res) => {
     try {
         const { userId, prompt } = req.body;
 
@@ -98,7 +99,7 @@ router.post('/api/auth/best_prompt', async (req, res) => {
     }
 });
 
-router.post('/api/auth/simulation', async (req, res) => {
+router.post('/auth/simulation', async (req, res) => {
     try {
         const { userId, prompt, timeSpentSeconds, timings = {}, ipqScore } = req.body;
 
@@ -170,7 +171,7 @@ router.post('/api/auth/simulation', async (req, res) => {
     }
 });
 
-router.get('/api/simulations', async (req, res) => {
+router.get('/simulations', async (req, res) => {
     try {
         const query = `
             SELECT s.id, u.name, u.email, s.prompt, s.prompt_length, s.time_spent_seconds,
@@ -188,7 +189,7 @@ router.get('/api/simulations', async (req, res) => {
     }
 });
 
-router.get('/api/chats', async (req, res) => {
+router.get('/chats', async (req, res) => {
     try {
         const query = `
             SELECT c.id, u.name, u.email, c.user_prompt, c.ai_prompt, c.user_score, c.ai_score, c.created_at
@@ -204,7 +205,7 @@ router.get('/api/chats', async (req, res) => {
     }
 });
 
-router.get("/api/users/stats", async (req, res) => {
+router.get("/users/stats", async (req, res) => {
     try {
         const query = `
       SELECT 

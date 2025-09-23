@@ -270,37 +270,6 @@ export default function Home() {
             </li>
           </ul>
         </div>
-
-        {/* Quick commands */}
-        <div
-          style={{
-            padding: "16px",
-            background: "rgba(255,255,255,0.9)",
-            borderRadius: "12px",
-            border: "1px solid rgba(229, 231, 235, 0.8)",
-            color: "#4b5563",
-            fontSize: "0.88rem",
-            boxShadow: "0 10px 22px rgba(15, 23, 42, 0.08)",
-          }}
-        >
-          <div style={{ fontWeight: 600, color: "#1f2937" }}>Commandes rapides</div>
-          <pre
-            style={{
-              margin: "10px 0 0",
-              fontSize: "0.82rem",
-              lineHeight: "1.45",
-              color: "#1f2937",
-              background: "rgba(241, 245, 249, 0.65)",
-              borderRadius: "8px",
-              padding: "12px",
-            }}
-          >
-            {`# Lancer un serveur statique à la racine
-npx http-server -p 8080
-
-# Veiller à servir /index.html côté backend (Express)`}
-          </pre>
-        </div>
       </aside>
     </main>
     </div>
