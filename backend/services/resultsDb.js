@@ -24,7 +24,7 @@ const normalizeStudentId = (value) =>
  *   user_id: string;
  *   user_name: string | null;
  *   created_at: Date | string;
- *   ipq_score: number | null;
+ *   computed_score: number | null;
  *   time_spent_seconds: number | null;
  * }>} rows
  * @returns {{
@@ -55,8 +55,9 @@ const buildSeriesWithDelta = (rows) => {
       ? row.created_at.toISOString()
       : new Date(row.created_at).toISOString();
 
-    const hasScore = row.ipq_score !== null && row.ipq_score !== undefined;
-    const BrestScore = hasScore ? Number(row.ipq_score) : null;
+    const hasScore =
+      row.computed_score !== null && row.computed_score !== undefined;
+    const BrestScore = hasScore ? Number(row.computed_score) : null;
     const timeSpentSec = row.time_spent_seconds === null || row.time_spent_seconds === undefined
       ? 0
       : Number(row.time_spent_seconds);
@@ -103,7 +104,13 @@ export const fetchSummary = async ({ from, to } = {}) => {
   const toParam = parseDateParam(to);
 
   const { rows } = await pool.query(
-    `SELECT s.id, s.user_id, s.created_at, s.ipq_score, s.time_spent_seconds, u.name AS user_name
+    `SELECT s.id, s.user_id, s.created_at,
+            CASE
+              WHEN s.time_spent_seconds IS NOT NULL AND s.time_spent_seconds > 0
+                THEN LEAST(100, GREATEST(0, ROUND(s.time_spent_seconds / 10.0)))
+              ELSE NULL
+            END AS computed_score,
+            s.time_spent_seconds, u.name AS user_name
      FROM simulation_sessions s
      LEFT JOIN users u ON u.id = s.user_id
      WHERE ($1::timestamptz IS NULL OR s.created_at >= $1)
@@ -163,8 +170,9 @@ export const fetchSummary = async ({ from, to } = {}) => {
       timeDistributionMap.set(studentId, current);
     }
 
-    const hasScore = row.ipq_score !== null && row.ipq_score !== undefined;
-    const score = hasScore ? Number(row.ipq_score) : null;
+    const hasScore =
+      row.computed_score !== null && row.computed_score !== undefined;
+    const score = hasScore ? Number(row.computed_score) : null;
     if (hasScore && score !== null && !Number.isNaN(score)) {
       brestScoreSum += score;
       brestScoreCount += 1;
@@ -285,7 +293,13 @@ export const fetchStudentSeries = async (studentId) => {
   }
 
   const { rows } = await pool.query(
-    `SELECT s.id, s.user_id, s.created_at, s.ipq_score, s.time_spent_seconds, u.name AS user_name
+    `SELECT s.id, s.user_id, s.created_at,
+            CASE
+              WHEN s.time_spent_seconds IS NOT NULL AND s.time_spent_seconds > 0
+                THEN LEAST(100, GREATEST(0, ROUND(s.time_spent_seconds / 10.0)))
+              ELSE NULL
+            END AS computed_score,
+            s.time_spent_seconds, u.name AS user_name
      FROM simulation_sessions s
      LEFT JOIN users u ON u.id = s.user_id
      WHERE s.user_id = $1
