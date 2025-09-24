@@ -17,9 +17,15 @@ import {
 const router = express.Router();
 
 // Feature flag toggles between mock in-memory data and the PostgreSQL-backed
-// implementation. When RESULTS_USE_DB is "true" we serve live analytics from
-// the database; otherwise we fall back to the deterministic mock helpers.
-const USE_DB = process.env.RESULTS_USE_DB === "true";
+// implementation. We evaluate the environment variable lazily so deployments
+// that rely on dotenv (loaded after the module graph is evaluated) still pick
+// up the correct value. Values such as "true", "TRUE" or "1" enable the DB
+// mode.
+const useDbMode = () => {
+  const raw = process.env.RESULTS_USE_DB;
+  if (!raw) return false;
+  return ["true", "1"].includes(raw.toString().trim().toLowerCase());
+};
 
 
 const parseRangeParams = (req) => {
@@ -30,7 +36,7 @@ const parseRangeParams = (req) => {
 router.get("/metrics/summary", async (req, res) => {
   try {
     const { from, to } = parseRangeParams(req);
-    if (USE_DB) {
+    if (useDbMode()) {
       const summary = await fetchSummaryFromDb({ from, to });
       return res.json({ ...summary, generatedAt: new Date().toISOString() });
     }
@@ -65,7 +71,7 @@ router.get("/metrics/summary", async (req, res) => {
 router.get("/students", async (req, res) => {
   try {
     const rawQuery = (req.query.query || "").toString();
-    if (USE_DB) {
+    if (useDbMode()) {
       const students = await fetchStudentsFromDb({ query: rawQuery });
       return res.json(students);
     }
@@ -92,7 +98,7 @@ router.get("/students", async (req, res) => {
 router.get("/students/:id/series", async (req, res) => {
   try {
     const { id } = req.params;
-    if (USE_DB) {
+    if (useDbMode()) {
       const result = await fetchStudentSeriesFromDb(id);
       if (!result) {
         return res.status(404).json({ message: "Student not found" });
@@ -121,7 +127,7 @@ router.get("/students/:id/series", async (req, res) => {
 
 router.delete("/data", (req, res) => {
   try {
-    if (USE_DB) {
+    if (useDbMode()) {
       return res.status(400).json({ message: "Deletion not supported in DB mode." });
     }
     const { scope, studentId, from, to, dryRun } = req.body || {};
