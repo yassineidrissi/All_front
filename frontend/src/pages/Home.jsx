@@ -152,6 +152,25 @@ export default function Home() {
               >
                 ⚡ Admin Dashboard
               </Link>
+              <Link
+                className="btn ghost"
+                to="/results"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "12px 16px",
+                  borderRadius: "10px",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                  background: "transparent",
+                  color: "#2563eb",
+                  border: "2px solid rgba(37,99,235,0.25)",
+                  marginTop: "8px",
+                }}
+              >
+                📊 Résultats
+              </Link>
             </>
           )}
         </div>
