@@ -21,6 +21,7 @@ const router = express.Router();
 // the database; otherwise we fall back to the deterministic mock helpers.
 const USE_DB = process.env.RESULTS_USE_DB === "true";
 
+
 const parseRangeParams = (req) => {
   const { from, to } = req.query;
   return { from, to };
@@ -33,6 +34,7 @@ router.get("/metrics/summary", async (req, res) => {
       const summary = await fetchSummaryFromDb({ from, to });
       return res.json({ ...summary, generatedAt: new Date().toISOString() });
     }
+
 
     const summary = aggregateSummary({ from, to });
 
