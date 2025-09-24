@@ -8,17 +8,34 @@ import {
   getStudentsWithLastActivity,
   performDeletion,
 } from "../utils/resultsData.js";
+import {
+  fetchSummary as fetchSummaryFromDb,
+  fetchStudents as fetchStudentsFromDb,
+  fetchStudentSeries as fetchStudentSeriesFromDb,
+} from "../services/resultsDb.js";
 
 const router = express.Router();
+
+// Feature flag toggles between mock in-memory data and the PostgreSQL-backed
+// implementation. When RESULTS_USE_DB is "true" we serve live analytics from
+// the database; otherwise we fall back to the deterministic mock helpers.
+const USE_DB = process.env.RESULTS_USE_DB === "true";
+
 
 const parseRangeParams = (req) => {
   const { from, to } = req.query;
   return { from, to };
 };
 
-router.get("/metrics/summary", (req, res) => {
+router.get("/metrics/summary", async (req, res) => {
   try {
     const { from, to } = parseRangeParams(req);
+    if (USE_DB) {
+      const summary = await fetchSummaryFromDb({ from, to });
+      return res.json({ ...summary, generatedAt: new Date().toISOString() });
+    }
+
+
     const summary = aggregateSummary({ from, to });
 
     const totalTimeHours = summary.totalTimeSec / 3600;
@@ -45,9 +62,14 @@ router.get("/metrics/summary", (req, res) => {
   }
 });
 
-router.get("/students", (req, res) => {
+router.get("/students", async (req, res) => {
   try {
-    const query = (req.query.query || "").toString().toLowerCase();
+    const rawQuery = (req.query.query || "").toString();
+    if (USE_DB) {
+      const students = await fetchStudentsFromDb({ query: rawQuery });
+      return res.json(students);
+    }
+    const query = rawQuery.toLowerCase();
     const students = getStudentsWithLastActivity()
       .filter((student) =>
         query
@@ -67,9 +89,16 @@ router.get("/students", (req, res) => {
   }
 });
 
-router.get("/students/:id/series", (req, res) => {
+router.get("/students/:id/series", async (req, res) => {
   try {
     const { id } = req.params;
+    if (USE_DB) {
+      const result = await fetchStudentSeriesFromDb(id);
+      if (!result) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      return res.json(result);
+    }
     const student = getStudentById(id);
 
     if (!student) {
@@ -92,6 +121,9 @@ router.get("/students/:id/series", (req, res) => {
 
 router.delete("/data", (req, res) => {
   try {
+    if (USE_DB) {
+      return res.status(400).json({ message: "Deletion not supported in DB mode." });
+    }
     const { scope, studentId, from, to, dryRun } = req.body || {};
 
     if (!scope || !["all", "student", "dateRange"].includes(scope)) {
