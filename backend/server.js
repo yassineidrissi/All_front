@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import authRouter, { authenticateToken } from './routes/auth.js';
 import chatRouter from './routes/chat.js';
+import resultsRouter from './routes/results.js';
 import { testConnection } from './db.js';
 import ttsRouter from './routes/tts.js';
 
@@ -35,6 +36,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/tts', ttsRouter);
 // Mount chat-related routes under /api to avoid intercepting other routes
+app.use('/api', authenticateToken, resultsRouter);
 app.use('/api', authenticateToken, chatRouter);
 // app.use('/api/chat', authenticateToken, chatRouter); // Alternative namespace if desired
 
