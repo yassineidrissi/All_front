@@ -7,6 +7,10 @@ import Chat from "./pages/Chat";
 import AuthPage from "./pages/Auth";
 import Simulation from "./pages/Simulation";
 import AdminDashboard from "./pages/Dashboard"; // Admin dashboard page
+import ResultsLayout from "./pages/results/ResultsLayout";
+import DashboardPage from "./pages/results/DashboardPage";
+import StudentsPage from "./pages/results/StudentsPage";
+import AdminPage from "./pages/results/AdminPage";
 
 // --- AdminRoute wrapper ---
 function AdminRoute({ children }) {
@@ -73,6 +77,21 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/results"
+            element={
+              <ProtectedRoute>
+                <AdminRoute>
+                  <ResultsLayout />
+                </AdminRoute>
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<DashboardPage />} />
+            <Route path="students" element={<StudentsPage />} />
+            <Route path="admin" element={<AdminPage />} />
+          </Route>
 
           {/* Catch-all route */}
           <Route
