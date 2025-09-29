@@ -2,23 +2,35 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ShieldAlert } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { deleteData, searchStudents } from "../../lib/results/api";
-import { formatDateTime, formatDuration, formatScore } from "../../lib/results/utils";
-import DeleteForm from "../../components/results/DeleteForm";
-import DataTable from "../../components/results/DataTable";
-import ConfirmDialog from "../../components/results/ConfirmDialog";
+import { API_URL } from "../../config";
 
 const initialDateRange = { from: "", to: "" };
+
+const formatDateTime = (dateString) => {
+  return new Date(dateString).toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+const formatScore = (value) => {
+  if (value === null || value === undefined) return "—";
+  return parseFloat(value).toFixed(2);
+};
 
 export default function AdminPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [scope, setScope] = useState("all");
-  const [studentQuery, setStudentQuery] = useState("");
-  const [studentOptions, setStudentOptions] = useState([]);
-  const [studentsLoading, setStudentsLoading] = useState(false);
-  const [studentsError, setStudentsError] = useState(null);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [dataType, setDataType] = useState("chats");
+  const [userQuery, setUserQuery] = useState("");
+  const [userOptions, setUserOptions] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersError, setUsersError] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [dateRange, setDateRange] = useState(initialDateRange);
   const [preview, setPreview] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
@@ -27,51 +39,59 @@ export default function AdminPage() {
   const [confirmationText, setConfirmationText] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
   const pendingDeletion = useMemo(() => {
     if (!preview) return 0;
-    if (preview.deletedCount && preview.deletedCount > 0) {
-      return preview.deletedCount;
-    }
     return preview.matchedCount || 0;
   }, [preview]);
 
-  const columns = useMemo(
-    () => [
-      { key: "timestamp", label: "Date", render: (value) => formatDateTime(value) },
-      { key: "studentName", label: "Étudiant" },
-      { key: "BrestScore", label: "BRESTScore", render: (value) => formatScore(value) },
-      {
-        key: "deltaBrestScore",
-        label: "Δ",
-        render: (value) => (value === null || value === undefined ? "—" : `${value > 0 ? "+" : ""}${formatScore(value)}`),
-      },
-      { key: "timeSpentSec", label: "Durée", render: (value) => formatDuration(value) },
-    ],
-    []
-  );
+  const columns = useMemo(() => {
+    if (dataType === "chats") {
+      return [
+        { key: "created_at", label: "Date", render: (value) => formatDateTime(value) },
+        { key: "name", label: "Utilisateur" },
+        { key: "user_score", label: "Score utilisateur", render: (value) => formatScore(value) },
+        { key: "ai_score", label: "Score IA", render: (value) => formatScore(value) },
+      ];
+    } else {
+      return [
+        { key: "created_at", label: "Date", render: (value) => formatDateTime(value) },
+        { key: "name", label: "Utilisateur" },
+        { key: "time_spent_seconds", label: "Durée (s)" },
+        { key: "ipq_score", label: "IPQ Score" },
+      ];
+    }
+  }, [dataType]);
 
   const previewPayload = useMemo(() => {
-    const payload = { scope, dryRun: true };
-    if (scope === "student" && selectedStudent) payload.studentId = selectedStudent.id;
+    const payload = { scope, dataType, dryRun: true };
+    if (scope === "user" && selectedUser) payload.userId = selectedUser.id;
     if (scope === "dateRange") {
       if (dateRange.from) payload.from = dateRange.from;
       if (dateRange.to) payload.to = dateRange.to;
     }
     return payload;
-  }, [scope, selectedStudent, dateRange]);
+  }, [scope, dataType, selectedUser, dateRange]);
 
   const canPreview = useMemo(() => {
-    if (scope === "student") return Boolean(selectedStudent);
+    if (scope === "user") return Boolean(selectedUser);
     if (scope === "dateRange") return Boolean(dateRange.from && dateRange.to);
     return true;
-  }, [scope, selectedStudent, dateRange]);
+  }, [scope, selectedUser, dateRange]);
 
   const handlePreview = async () => {
     if (!token || !canPreview) return;
     try {
       setLoadingPreview(true);
       setPreviewError(null);
-      const result = await deleteData(token, previewPayload);
+
+      const params = new URLSearchParams(previewPayload);
+      const response = await fetch(`${API_URL}/api/admin/delete-preview?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch preview');
+      const result = await response.json();
       setPreview(result);
       setConfirmationText("");
       setSuccessMessage("");
@@ -82,31 +102,39 @@ export default function AdminPage() {
     }
   };
 
-  const fetchStudents = useCallback(
-    (value) => {
+  const fetchUsers = useCallback(
+    async (value) => {
       if (!token) return;
-      setStudentsLoading(true);
-      setStudentsError(null);
-      searchStudents(token, value)
-        .then((data) => setStudentOptions(data))
-        .catch((error) => setStudentsError(error.message))
-        .finally(() => setStudentsLoading(false));
+      setUsersLoading(true);
+      setUsersError(null);
+      try {
+        const response = await fetch(`${API_URL}/api/users/search?q=${value}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Failed to search users');
+        const data = await response.json();
+        setUserOptions(data);
+      } catch (error) {
+        setUsersError(error.message);
+      } finally {
+        setUsersLoading(false);
+      }
     },
     [token]
   );
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      if (scope === "student") {
-        fetchStudents(studentQuery);
+      if (scope === "user") {
+        fetchUsers(userQuery);
       }
     }, 200);
     return () => clearTimeout(handler);
-  }, [studentQuery, scope, fetchStudents]);
+  }, [userQuery, scope, fetchUsers]);
 
   useEffect(() => {
-    if (scope !== "student") {
-      setSelectedStudent(null);
+    if (scope !== "user") {
+      setSelectedUser(null);
     }
     if (scope !== "dateRange") {
       setDateRange(initialDateRange);
@@ -120,16 +148,26 @@ export default function AdminPage() {
     setDeleting(true);
     try {
       const payload = { ...previewPayload, dryRun: false };
-      const result = await deleteData(token, payload);
+      const response = await fetch(`${API_URL}/api/admin/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error('Failed to delete');
+      const result = await response.json();
+
       setSuccessMessage(
-        `Suppression réussie : ${result.deletedCount} élément${result.deletedCount > 1 ? "s" : ""} supprimé${
-          result.deletedCount > 1 ? "s" : ""
+        `Suppression réussie : ${result.deletedCount} élément${result.deletedCount > 1 ? "s" : ""} supprimé${result.deletedCount > 1 ? "s" : ""
         }.`
       );
       setPreview(result);
       setConfirmOpen(false);
       setConfirmationText("");
-      setTimeout(() => navigate("/results"), 1500);
+      setTimeout(() => navigate("/dashboard"), 1500);
     } catch (error) {
       setPreviewError(error.message);
     } finally {
@@ -147,19 +185,109 @@ export default function AdminPage() {
             <p className="text-xs text-rose-500">Les opérations sont irréversibles. Utiliser uniquement pour la maintenance.</p>
           </div>
         </header>
-        <DeleteForm
-          scope={scope}
-          onScopeChange={setScope}
-          studentQuery={studentQuery}
-          onStudentQueryChange={setStudentQuery}
-          students={studentOptions}
-          onSelectStudent={setSelectedStudent}
-          selectedStudent={selectedStudent}
-          dateRange={dateRange}
-          onDateRangeChange={setDateRange}
-          isLoadingStudents={studentsLoading}
-          studentError={studentsError}
-        />
+
+        {/* Data Type Selection */}
+        <div className="mb-4">
+          <label className="mb-2 block text-sm font-medium text-slate-700">Type de données</label>
+          <div className="flex gap-2">
+            {["chats", "simulations"].map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setDataType(type)}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition ${dataType === type
+                    ? "bg-indigo-600 text-white"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+              >
+                {type === "chats" ? "Sessions Chat" : "Simulations"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Scope Selection */}
+        <div className="mb-4">
+          <label className="mb-2 block text-sm font-medium text-slate-700">Portée de suppression</label>
+          <div className="flex gap-2">
+            {["all", "user", "dateRange"].map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setScope(s)}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition ${scope === s
+                    ? "bg-rose-600 text-white"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+              >
+                {s === "all" ? "Tout" : s === "user" ? "Utilisateur" : "Plage de dates"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* User Selection */}
+        {scope === "user" && (
+          <div className="mb-4">
+            <label className="mb-2 block text-sm font-medium text-slate-700">Sélectionner un utilisateur</label>
+            <input
+              type="text"
+              value={userQuery}
+              onChange={(e) => setUserQuery(e.target.value)}
+              placeholder="Rechercher par nom ou email..."
+              className="mb-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            />
+            {usersLoading && <p className="text-xs text-slate-500">Recherche...</p>}
+            {usersError && <p className="text-xs text-rose-600">{usersError}</p>}
+            {userOptions.length > 0 && (
+              <div className="mt-2 max-h-40 space-y-1 overflow-y-auto rounded-lg border border-slate-200 p-2">
+                {userOptions.map((user) => (
+                  <button
+                    key={user.id}
+                    type="button"
+                    onClick={() => setSelectedUser(user)}
+                    className={`w-full rounded px-3 py-2 text-left text-sm transition ${selectedUser?.id === user.id
+                        ? "bg-indigo-100 text-indigo-900"
+                        : "hover:bg-slate-50"
+                      }`}
+                  >
+                    {user.name} - {user.email}
+                  </button>
+                ))}
+              </div>
+            )}
+            {selectedUser && (
+              <p className="mt-2 text-sm text-slate-600">
+                Sélectionné : <strong>{selectedUser.name}</strong>
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Date Range */}
+        {scope === "dateRange" && (
+          <div className="mb-4 grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Date de début</label>
+              <input
+                type="date"
+                value={dateRange.from}
+                onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Date de fin</label>
+              <input
+                type="date"
+                value={dateRange.to}
+                onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </div>
+          </div>
+        )}
+
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
@@ -186,15 +314,6 @@ export default function AdminPage() {
             <p className="mt-2 text-sm text-slate-600">
               {preview.matchedCount} élément{preview.matchedCount > 1 ? "s" : ""} trouvé{preview.matchedCount > 1 ? "s" : ""}.
             </p>
-            {preview.warnings && preview.warnings.length > 0 && (
-              <ul className="mt-4 space-y-2 text-sm text-amber-600">
-                {preview.warnings.map((warning) => (
-                  <li key={warning} className="rounded-lg bg-amber-50 px-3 py-2">
-                    {warning}
-                  </li>
-                ))}
-              </ul>
-            )}
             <div className="mt-4 flex justify-between text-sm text-slate-500">
               <span>Éléments supprimés si confirmé : {pendingDeletion}</span>
               <button
@@ -207,40 +326,73 @@ export default function AdminPage() {
               </button>
             </div>
           </div>
-          <DataTable columns={columns} rows={preview.sample || []} emptyLabel="Aucun échantillon" />
+
+          {preview.sample && preview.sample.length > 0 && (
+            <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    {columns.map((col) => (
+                      <th key={col.key} className="px-4 py-3 text-left font-semibold text-slate-700">
+                        {col.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.sample.map((row, idx) => (
+                    <tr key={idx} className="border-t border-slate-100">
+                      {columns.map((col) => (
+                        <td key={col.key} className="px-4 py-3 text-slate-600">
+                          {col.render ? col.render(row[col.key]) : row[col.key] || "—"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       )}
 
-      <ConfirmDialog
-        open={confirmOpen}
-        title="Confirmer la suppression"
-        description="Cette action supprimera définitivement les données sélectionnées. Tapez DELETE pour continuer."
-        confirmLabel={deleting ? "Suppression…" : "Confirmer"}
-        confirmDisabled={confirmationText !== "DELETE" || deleting}
-        onCancel={() => {
-          setConfirmOpen(false);
-          setConfirmationText("");
-        }}
-        onConfirm={handleConfirmDelete}
-      />
-
       {confirmOpen && (
-        <div className="fixed inset-x-0 bottom-0 z-50 bg-white/90 px-6 py-4 shadow-lg">
-          <div className="mx-auto flex max-w-lg flex-col gap-3">
-            <label className="text-sm font-semibold text-slate-700" htmlFor="confirm-input">
-              Saisissez DELETE pour confirmer
-            </label>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-slate-900">Confirmer la suppression</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Cette action supprimera définitivement les données sélectionnées. Tapez DELETE pour continuer.
+            </p>
             <input
-              id="confirm-input"
               type="text"
               value={confirmationText}
-              onChange={(event) => setConfirmationText(event.target.value)}
-              className="rounded-lg border border-rose-300 px-3 py-2 text-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300"
+              onChange={(e) => setConfirmationText(e.target.value)}
+              placeholder="Tapez DELETE"
+              className="mt-4 w-full rounded-lg border border-rose-300 px-3 py-2 text-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300"
             />
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmOpen(false);
+                  setConfirmationText("");
+                }}
+                className="flex-1 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={confirmationText !== "DELETE" || deleting}
+                className="flex-1 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleting ? "Suppression…" : "Confirmer"}
+              </button>
+            </div>
           </div>
         </div>
       )}
     </div>
   );
 }
-

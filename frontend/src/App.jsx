@@ -9,8 +9,8 @@ import Simulation from "./pages/Simulation";
 import AdminDashboard from "./pages/Dashboard"; // Admin dashboard page
 import ResultsLayout from "./pages/results/ResultsLayout";
 import DashboardPage from "./pages/results/DashboardPage";
-import StudentsPage from "./pages/results/StudentsPage";
 import AdminPage from "./pages/results/AdminPage";
+import UsersPage from "./pages/results/StudentsPage";
 
 // --- AdminRoute wrapper ---
 function AdminRoute({ children }) {
@@ -89,7 +89,7 @@ export default function App() {
             }
           >
             <Route index element={<DashboardPage />} />
-            <Route path="students" element={<StudentsPage />} />
+            <Route path="students" element={<UsersPage />} />
             <Route path="admin" element={<AdminPage />} />
           </Route>
 

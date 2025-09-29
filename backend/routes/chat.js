@@ -253,4 +253,235 @@ router.get("/users/stats", async (req, res) => {
     }
 });
 
+router.get('/dashboard/summary', async (req, res) => {
+    try {
+        const { from, to } = req.query;
+        
+        // Build date filter parameters
+        let params = [];
+        let whereClause = '';
+        
+        if (from && to) {
+            whereClause = 'WHERE created_at >= $1 AND created_at <= $2';
+            params = [from, to];
+        } else if (from) {
+            whereClause = 'WHERE created_at >= $1';
+            params = [from];
+        } else if (to) {
+            whereClause = 'WHERE created_at <= $1';
+            params = [to];
+        }
+
+        // Get basic counts
+        const totalUsersQuery = 'SELECT COUNT(*) as count FROM users WHERE is_admin = false';
+        const { rows: userRows } = await pool.query(totalUsersQuery);
+        const totalUsers = parseInt(userRows[0].count);
+
+        // Get chat sessions stats
+        const chatStatsQuery = `
+            SELECT 
+                COUNT(*) as total_sessions,
+                AVG(user_score) as avg_user_score,
+                AVG(ai_score) as avg_ai_score
+            FROM chat_sessions 
+            ${whereClause}
+        `;
+        const { rows: chatRows } = await pool.query(chatStatsQuery, params);
+        const chatStats = chatRows[0];
+
+        // Get simulation stats
+        const simStatsQuery = `
+            SELECT 
+                COUNT(*) as total_sessions,
+                AVG(ipq_score) as avg_ipq_score,
+                SUM(time_spent_seconds) as total_time_seconds
+            FROM simulation_sessions 
+            ${whereClause}
+        `;
+        const { rows: simRows } = await pool.query(simStatsQuery, params);
+        const simStats = simRows[0];
+
+        // Get daily activity for the last 30 days
+        const dailyQuery = `
+            SELECT 
+                DATE(created_at) as date,
+                COUNT(*) as sessions
+            FROM (
+                SELECT created_at FROM chat_sessions ${whereClause}
+                UNION ALL
+                SELECT created_at FROM simulation_sessions ${whereClause}
+            ) combined
+            GROUP BY DATE(created_at)
+            ORDER BY date DESC
+            LIMIT 30
+        `;
+        const { rows: dailyRows } = await pool.query(dailyQuery, params);
+
+        res.json({
+            totalUsers,
+            totalChatSessions: parseInt(chatStats.total_sessions) || 0,
+            totalSimulations: parseInt(simStats.total_sessions) || 0,
+            avgUserScore: parseFloat(chatStats.avg_user_score) || 0,
+            avgAiScore: parseFloat(chatStats.avg_ai_score) || 0,
+            avgIpqScore: parseFloat(simStats.avg_ipq_score) || 0,
+            totalTimeHours: (parseInt(simStats.total_time_seconds) || 0) / 3600,
+            dailyActivity: dailyRows,
+            generatedAt: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error fetching dashboard summary:', error);
+        res.status(500).json({ error: 'Failed to fetch dashboard summary' });
+    }
+});
+
+router.get('/dashboard/top-performers', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                u.name,
+                u.email,
+                u.id,
+                COALESCE(AVG(c.user_score), 0) as avg_user_score,
+                COALESCE(AVG(c.ai_score), 0) as avg_ai_score,
+                COUNT(c.id) as chat_count,
+                COUNT(s.id) as simulation_count
+            FROM users u
+            LEFT JOIN chat_sessions c ON u.id = c.user_id
+            LEFT JOIN simulation_sessions s ON u.id = s.user_id
+            WHERE u.is_admin = false
+            GROUP BY u.id, u.name, u.email
+            HAVING COUNT(c.id) > 0 OR COUNT(s.id) > 0
+            ORDER BY COALESCE(AVG(c.user_score), 0) DESC
+            LIMIT 10
+        `;
+
+        const { rows } = await pool.query(query);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching top performers:', error);
+        res.status(500).json({ error: 'Failed to fetch top performers' });
+    }
+});
+
+// User search
+router.get('/users/search', async (req, res) => {
+    try {
+        const { q = '' } = req.query;
+        const query = `
+            SELECT id, name, email
+            FROM users
+            WHERE is_admin = false
+            AND (LOWER(name) LIKE LOWER($1) OR LOWER(email) LIKE LOWER($1))
+            ORDER BY name
+            LIMIT 20
+        `;
+        const { rows } = await pool.query(query, [`%${q}%`]);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error searching users:', error);
+        res.status(500).json({ error: 'Failed to search users' });
+    }
+});
+
+// Delete preview
+router.get('/admin/delete-preview', async (req, res) => {
+    try {
+        const { scope, dataType, userId, from, to } = req.query;
+        const table = dataType === 'chats' ? 'chat_sessions' : 'simulation_sessions';
+        
+        let whereConditions = [];
+        let params = [];
+        let paramCount = 1;
+        
+        if (scope === 'user' && userId) {
+            whereConditions.push(`${table}.user_id = $${paramCount}`);
+            params.push(userId);
+            paramCount++;
+        } else if (scope === 'dateRange') {
+            if (from) {
+                whereConditions.push(`${table}.created_at >= $${paramCount}`);
+                params.push(from);
+                paramCount++;
+            }
+            if (to) {
+                whereConditions.push(`${table}.created_at <= $${paramCount}`);
+                params.push(to);
+                paramCount++;
+            }
+        }
+        
+        const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+        
+        const countQuery = `SELECT COUNT(*) as count FROM ${table} ${whereClause}`;
+        const { rows: countRows } = await pool.query(countQuery, params);
+        const matchedCount = parseInt(countRows[0].count);
+        
+        let sampleQuery;
+        if (dataType === 'chats') {
+            sampleQuery = `
+                SELECT c.id, c.user_prompt, c.user_score, c.ai_score, c.created_at, u.name, u.email
+                FROM chat_sessions c
+                JOIN users u ON u.id = c.user_id
+                ${whereClause}
+                ORDER BY c.created_at DESC
+                LIMIT 10
+            `;
+        } else {
+            sampleQuery = `
+                SELECT s.id, s.prompt, s.time_spent_seconds, s.ipq_score, s.created_at, u.name, u.email
+                FROM simulation_sessions s
+                JOIN users u ON u.id = s.user_id
+                ${whereClause}
+                ORDER BY s.created_at DESC
+                LIMIT 10
+            `;
+        }
+        
+        const { rows: sampleRows } = await pool.query(sampleQuery, params);
+        
+        res.json({ matchedCount, sample: sampleRows });
+    } catch (error) {
+        console.error('Error in delete preview:', error);
+        res.status(500).json({ error: 'Failed to generate preview' });
+    }
+});
+
+// Delete
+router.delete('/admin/delete', async (req, res) => {
+    try {
+        const { scope, dataType, userId, from, to } = req.body;
+        const table = dataType === 'chats' ? 'chat_sessions' : 'simulation_sessions';
+        
+        let whereConditions = [];
+        let params = [];
+        let paramCount = 1;
+        
+        if (scope === 'user' && userId) {
+            whereConditions.push(`user_id = $${paramCount}`);
+            params.push(userId);
+            paramCount++;
+        } else if (scope === 'dateRange') {
+            if (from) {
+                whereConditions.push(`created_at >= $${paramCount}`);
+                params.push(from);
+                paramCount++;
+            }
+            if (to) {
+                whereConditions.push(`created_at <= $${paramCount}`);
+                params.push(to);
+                paramCount++;
+            }
+        }
+        
+        const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+        const deleteQuery = `DELETE FROM ${table} ${whereClause} RETURNING id`;
+        const { rows } = await pool.query(deleteQuery, params);
+        
+        res.json({ deletedCount: rows.length, matchedCount: rows.length });
+    } catch (error) {
+        console.error('Error in delete:', error);
+        res.status(500).json({ error: 'Failed to delete data' });
+    }
+});
+
 export default router
