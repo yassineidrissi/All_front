@@ -30,9 +30,8 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 
 # Install deps
-COPY package.json package-lock.json ./
-# Use --omit=dev for smaller runtime if you don't need dev deps at runtime
-RUN npm ci --omit=dev
+COPY package*.json ./
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
 
 # Copy app source
 COPY . .
