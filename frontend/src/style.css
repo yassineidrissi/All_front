@@ -75,6 +75,54 @@ header h1 {
     border-bottom: 2px solid var(--primary-color);
 }
 
+.top-right-user-menu {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.85rem;
+    background-color: #f8f9fa;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.06);
+    font-size: 0.9rem;
+    color: var(--text-light);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.top-right-user-menu__link {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+    padding-bottom: 0.1rem;
+}
+
+.top-right-user-menu__link:hover,
+.top-right-user-menu__link--active {
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.top-right-user-menu__greeting {
+    color: #5f6368;
+    font-size: 0.85rem;
+}
+
+.top-right-user-menu__logout {
+    padding: 0.4rem 0.9rem;
+    border-radius: 0.6rem;
+    border: 1px solid #dcdfe6;
+    background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%);
+    color: #4a4a4a;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.top-right-user-menu__logout:hover {
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(148, 163, 184, 0.25);
+}
+
 /* Scenario Banner */
 .scenario-banner {
     background-color: var(--primary-light);

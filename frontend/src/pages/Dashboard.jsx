@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { Loader2 } from "lucide-react";
 import { API_URL } from "../config";
 import "../style.css";
+import TopRightUserMenu from "../components/TopRightUserMenu";
 
 export default function AdminDashboard() {
     const { user, token } = useAuth();
@@ -60,6 +61,9 @@ export default function AdminDashboard() {
 
     return (
         <div className="min-h-screen p-6" style={{ background: "var(--bg-light)" }}>
+            <div className="flex justify-end mb-6">
+                <TopRightUserMenu />
+            </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-6">
                 Admin Dashboard
             </h1>

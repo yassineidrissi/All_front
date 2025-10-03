@@ -3,6 +3,7 @@ import "../style.css";
 import logo from "../assets/logo.png";
 import { useAuth } from "../context/AuthContext";
 import { API_URL } from "../config";
+import TopRightUserMenu from "../components/TopRightUserMenu";
 
 export default function Chat() {
     const [prompt, setPrompt] = useState("");
@@ -92,12 +93,6 @@ export default function Chat() {
         }
     };
 
-    const handleLogout = () => {
-        if (window.confirm("Êtes-vous sûr de vouloir vous déconnecter ?")) {
-            logout();
-        }
-    };
-
     return (
         <div className="main-container">
             {/* HEADER */}
@@ -107,27 +102,8 @@ export default function Chat() {
                     <span className="foundation-name">Fondation Léonie Chaptal</span>
                 </div>
                 <h1>Plateforme P-2 : Atelier de Feedback Réflexif</h1>
-                <nav className="nav-links">
-                    <a href="/" className="active">Accueil</a>
-                    <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <span style={{ color: '#666', fontSize: '0.9rem' }}>
-                            Bonjour, {user?.name || 'Utilisateur'}
-                        </span>
-                        <button
-                            onClick={handleLogout}
-                            style={{
-                                padding: '6px 12px',
-                                borderRadius: '6px',
-                                border: '1px solid #ddd',
-                                background: '#f8f9fa',
-                                color: '#666',
-                                cursor: 'pointer',
-                                fontSize: '0.85rem'
-                            }}
-                        >
-                            Déconnexion
-                        </button>
-                    </div>
+                <nav className="nav-links" aria-label="Navigation principale">
+                    <TopRightUserMenu />
                 </nav>
             </header>
 

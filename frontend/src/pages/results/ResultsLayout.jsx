@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
+import TopRightUserMenu from "../../components/TopRightUserMenu";
 
 const tabs = [
   { to: "/results", label: "Tableau de bord", exact: true },
@@ -11,13 +12,16 @@ export default function ResultsLayout() {
     <div className="min-h-screen bg-slate-100 py-8">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4">
         <header className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500">Résultats</p>
-            <h1 className="text-3xl font-bold text-slate-900">Espace de pilotage</h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-600">
-              Suivez les indicateurs clés, analysez les progrès des étudiants et gérez les données
-              collectées par la plateforme.
-            </p>
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500">Résultats</p>
+              <h1 className="text-3xl font-bold text-slate-900">Espace de pilotage</h1>
+              <p className="mt-2 max-w-3xl text-sm text-slate-600">
+                Suivez les indicateurs clés, analysez les progrès des étudiants et gérez les données
+                collectées par la plateforme.
+              </p>
+            </div>
+            <TopRightUserMenu className="shrink-0" />
           </div>
           <nav aria-label="Navigation des résultats">
             <ul className="flex flex-wrap gap-3">
