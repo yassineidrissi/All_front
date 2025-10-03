@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "../hooks/useChat";
 import { useAuth } from "../context/AuthContext";
+import TopRightUserMenu from "./TopRightUserMenu";
 
 export const UI = ({ hidden, ...props }) => {
     const { user, logout, token } = useAuth();
@@ -96,6 +97,10 @@ export const UI = ({ hidden, ...props }) => {
             <div className="self-start backdrop-blur-md bg-white bg-opacity-50 p-4 rounded-lg flex items-center gap-2">
                 <img src="images/logo-chaptal.png" alt="Fondation Léonie Chaptal" className="h-10" />
                 <span className="text-lg font-semibold text-chaptal-purple">Fondation Léonie Chaptal</span>
+            </div>
+
+            <div className="self-end pointer-events-auto">
+                <TopRightUserMenu />
             </div>
 
             {/* Auxiliary buttons */}
